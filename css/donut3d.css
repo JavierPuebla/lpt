@@ -1,0 +1,15 @@
+path.slice{
+	stroke-width:3px;
+}
+polyline{
+	opacity: .5;
+	stroke: black;
+	stroke-width: 2px;
+	fill: none;
+}
+svg text.percent{
+	fill:white;
+	text-anchor:middle;
+	font-size:14px;
+  font-weight: bold;
+}

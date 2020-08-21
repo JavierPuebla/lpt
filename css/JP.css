@@ -1,0 +1,553 @@
+
+
+.btn-dropdown{
+  border-radius:5px;
+  background-color: #f7fbff;
+  border: 1px solid #2db2ff;
+  font-size: 15px;
+  /* font-weight: 500; */
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 5px;
+  padding-right: 5px;
+  letter-spacing:normal;
+
+}
+
+
+.jp-boleto{
+  padding: 2cm;
+  font-size: large;
+}
+
+
+.acciones{
+  text-align: right;
+  width: 130px;
+}
+
+
+/* FILTER */
+.jp-f_cat{
+  text-align: left;
+  padding: 2px;
+}
+
+.jp-smbtn{
+  background-color: #fafafa;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 2px;
+  letter-spacing:normal;
+}
+
+
+
+/*  invalids  */
+.is-invalid {
+
+  border-color: #edc2c2;
+  border-style: solid;
+  border-width:medium;
+
+
+
+}
+
+.is-valid {
+  border-color: #c5edc2;
+  border-style: solid;
+  border-width:medium;
+
+}
+
+
+/* FIX DEL EXCLUDE DE FILTROS DE TABLAS */
+.yadcf-label{
+  display: inline-flex;
+}
+.yadcf-filter{
+  display: inline-flex;
+}
+
+/****************/
+
+
+
+/* align a la derecha del search box de datatables */
+/*.dataTables_filter {
+   width: 50%;
+   float: right;
+   text-align: right;
+}
+*/
+
+
+.jp_td{
+  min-width: 30px;
+  width: 45px;
+  max-width: 50px;
+}
+
+/*https://material.io/resources/icons/?style=baseline*/
+/*material icons*/
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  padding: 2px;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
+.nav-bar
+
+.nav-item .nav-link {
+  color:rgba(255,255,255,1)!important;
+  font-weight: 700;
+
+}
+
+.jp-center{
+  margin:0 auto;
+}
+
+.jp-primary{
+  background-color: #2db2ff;
+}
+
+.title-lote{
+ color:#007FBB;
+ font-size: 17px;
+ font-weight: 600;
+ margin-bottom: 10px;
+ vertical-align: text-bottom;
+}
+
+.title-servicios{
+ color: #FFAB08;
+ font-size: 17px;
+ font-weight: 1200;
+ margin-bottom: 10px;
+ vertical-align: text-bottom;
+}
+
+
+.title-prestamos{
+ color:#329c28;
+ font-size: 15px;
+}
+
+.jp-modal-title{
+  padding-top: 10px;
+  color:#007FBB;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+
+}
+
+.jp-title{
+  font-size: 18px;
+  color:#007FBB;
+  line-height: 1.4;
+  font-family: Raleway;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  vertical-align: middle;
+}
+
+.card-title{
+  padding-top: 10px;
+  padding-left: 1px;
+  padding-right: 1px;
+  color:#fff;
+  font-size: 15px;
+  font-family: Raleway;
+  font-weight: 600;
+  letter-spacing: 0px;
+}
+
+
+.jp-card{
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  min-width: 0;
+  word-wrap: break-word;
+  background-color: #fff;
+  background-clip: border-box;
+  border: 1px solid #2db2ff;
+  border-radius: 0.05rem;
+  margin-bottom: 10px;
+}
+.card-header{
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 1;
+  padding-right:1;
+  background-color: #2db2ff;
+  color:#fff;
+  font-size: large;
+  font-weight: bold;
+}
+
+.jp-icon{
+  height: 28px;
+  width: 28px;
+  padding: 5px;
+}
+
+
+.jp-sml-icon{
+  height: 25px;
+  width: 25px;
+  padding: 5px;
+}
+
+/*.card-header.jumbotron{*/
+  /*background-color: rgb(252,252,252)*/
+/*}*/
+
+.card-body{
+  background-color: rgb(255, 255, 255)
+}
+
+
+.file-upload-scrollbar {
+position: relative;
+height: 150px;
+overflow: auto;
+}
+.table-wrapper-scroll-y {
+display: block;
+}
+
+
+form, input, select , label, p {
+    color: black !important;
+}
+
+.bar{
+  fill: #4682b4;
+}
+.bar:hover{
+  fill: #17bf3c;
+}
+
+.axis{
+  font-family: sans-serif;
+  font-size: 12px;
+}
+.axis path,
+.axis line
+  {fill: none;
+    shape-rendering: crispEdges;
+    stroke: #000;}
+
+.x.axis path{
+  display: none;
+}
+
+.y.axis text{
+  fill: #000;
+}
+
+.tooltip{
+  background: #b0c4de;
+  border: 0;
+  border-radius: 8px;
+  /* font-family: $font; */
+  font-size: 14px;
+  font-weight: bold;
+  height: 80px;
+  padding: 12px;
+  pointer-events: none;
+  position: absolute;
+  text-align: left;
+  width: 300px;
+}
+
+/*span
+    color: #d11515;
+*/
+.modal-xl {
+  width: 95%;
+  margin: 0 auto;
+  max-width: 1500px;
+}
+
+
+.modal-lg {
+  width: 75%;
+  margin: 0 auto;
+}
+
+.modal-med {
+  width: 50%;
+
+  margin: 0 auto;
+}
+
+.modal-sml {
+  width: 30%;
+  margin: 0 auto;
+}
+
+
+
+.row{
+  margin: -0.25rem;
+}
+
+.navbar{
+  padding:0.25rem;
+}
+
+.table td {
+  padding:0.50rem;
+  vertical-align:text-top;
+  border-top:1px solid #dee2e6;
+  /* border-top: none; */
+}
+
+.table thead th{
+  /* padding:0.25rem; */
+  vertical-align:middle;
+  font-size: 13px;
+  font-weight: 500;
+  /* border-top: none; */
+  /* border-bottom:2px solid #2db2ff; */
+}
+
+
+.tbl_lote thead th{
+  padding:0.25rem;
+  vertical-align:middle;
+  font-size: 13px;
+  font-weight: 400;
+  border-top: none;
+  border-bottom:2px solid #2db2ff;
+}
+
+.tbl_srv thead th{
+  padding:0.25rem;
+  vertical-align:middle;
+  font-size: 13px;
+  font-weight: 400;
+  border-top: none;
+  border-bottom:2px solid #FFAB08;
+}
+
+.tbl_prest thead th{
+  padding:0.25rem;
+  vertical-align:middle;
+  font-size: 13px;
+  font-weight: 400;
+  border-top: none;
+  border-bottom:2px solid #3d8805;
+}
+
+
+.btn-prestamo {
+  font-weight: 450;
+  letter-spacing: 0px;
+  background-color: #14d840;
+  color: #ffffff;
+  border: none;
+}
+
+
+.btn-prestamo:hover{
+  background-color: #ffffff;
+  color: #14d840;
+  border: 1px solid #14d840;
+}
+
+.btn-alerta {
+  font-weight: 600;
+  padding-left: 10px;
+  padding-right: 10px;
+  letter-spacing: 0.6px;
+  background-color: #d96a6a;
+  color: #ffffff;
+  border: none;
+}
+
+
+
+.btn-normal {
+    font-weight: 500;
+    padding-left: 10px;
+    padding-right: 10px;
+     letter-spacing: 0.6px;
+     background-color: #2db2ff;
+     color: #ffffff;
+     border: none;
+ }
+
+ .btn-secondary {
+  background-color: #f7fbff;
+  border: 1px solid #2db2ff;
+  font-weight: bold;
+  margin: 5px;
+
+ }
+
+ .btn-normal:hover{
+     background-color: #1673C3;
+     color: #fff;
+     border: none;
+
+ }
+
+
+.width-100 {
+  width:100%;
+}
+.rw1{
+    width: 330px;
+    overflow: hidden;
+    display: inline-block;
+    white-space: nowrap;
+}
+.rw2{
+    width: 150px;
+    overflow: hidden;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.flex-narrow {
+    flex-shrink: 2;
+}
+.flex-wide{
+  flex-grow: 2;
+}
+.flex-fixed-width-item {
+    flex: 0 0 100px;
+}
+
+.modal-dialog{
+    overflow-y: initial !important
+}
+
+/*.modal-content{
+    max-height: 570px;
+    overflow-y: auto;
+}
+*/
+.icon-mid{
+  font-size:36px;
+  padding-right:0.2em;
+  vertical-align: text-top;
+}
+
+.icon-big{
+  font-size:26px;
+  /*padding-right:0.2em;*/
+  /*vertical-align: text-top; */
+}
+
+.vertical-center {
+  min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
+  min-height: 100vh; /* These two lines are counted as one :-)       */
+  display: flex;
+  align-items: center;
+}
+.big-checkbox {width: 60px; height: 60px;}
+.colapse-navbar{margin-left:30px;}
+
+table.floatThead-table {
+    border-top: none;
+    border-bottom: none;
+    background-color: #fff;
+}
+ul.ui-autocomplete {
+    z-index: 100000000;
+    background: #dfdfdf  ;
+    border:solid;
+    border-width: 0.01em;
+    border-color: #bbbbbb;
+}
+
+.centered {
+	display:inline-flex;
+	align-content: center;
+	padding: 10px;
+}
+.jp-centered{
+    margin-left: auto;
+    margin-right: auto;
+}
+.jp-narrow{
+  width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+
+.jp-form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.jp-form-signin .form-signin-heading,
+.jp-form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.jp-form-signin .checkbox {
+  font-weight: normal;
+}
+.jp-form-signin .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.jp-form-signin .form-control:focus {
+  z-index: 2;
+}
+.jp-form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.jp-form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.printable { display: none !important; }
+.pagebreak { page-break-before: always; }
+
+
+@media print {
+    .printable { display: none !important; }
+    .pagebreak { page-break-before: always; }
+}
