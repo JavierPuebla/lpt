@@ -1,12 +1,165 @@
+//****** 25 agosto 2020
+//**** RESUMEN DE CUENTA DE PROVEEDOR
+//************************************************
 
+const prv_cards = {
+	_data:'',
+	_screen: '',
+	create: function (val) {
+		var obj = Object.create(this);
+		obj.set(val);
+		return obj._screen;
+	},
+	set: function (data) {
+		// TOP.data = val;
+		// TOP.detalle_ctas_arr = new Array();
+		// TOP.titulo_det_ctas_arr = new Array();
+		// TOP.detalle_ctas_a_pagar_arr = new Array();
+		// TOP.titulo_det_ctas_a_pagar_arr = new Array();
+		// // console.log('TOP data',TOP.data)
+		this._data = data;	
+		// this._screen = this.get_card1() + this.get_card2() + (this.get_card_canclds() ? this.get_card_canclds() : '');
+		this._screen = this.get_card1();
 
-//****** 11 agosto 2020
+	},
+	// ************** CUENTA PROVEEDOR CARD 1 OK *****************
+	get_card1: function () {
+		let r = '';
+		//*** ROW STATE AND FEC INIT
+		if (TOP.permisos <= 3) {
+			r += "<div class=\'row d-flex justify-content-around mt-4 mb-1 pt-3 \'>" + back_button.create() + this.get_fec_init() + "</div>";
+		}
+		
+		//*** LOTES CARD
+		r += "<div class=\'jp-card\' id='card1'>";
+		// *** HEADING
+		r += "<div id=\"heading_card1\" class='card-header d-flex justify-content-between'>"
+		r += "<button type=\"button\" class=\"btn-normal  \"  data-toggle=\"collapse\" data-target=\"#collapse_card1\" aria-expanded=\"true\" aria-controls=\"card1_body\"><i class=\"material-icons \">more_vert</i></button>";
+		r += this.get_header();
+		// if (TOP.permisos <= 10) {
+		// 	r += "<div class='col d-flex flex-wrap card-title justify-content-center'><button type=\"button\" class=\"btn-normal\" onClick=front_call({method:'call_edit',action:'call',sending:true,data:{type:'Atom',id:" + this._data.lote['cli_id'] + "}})><i class=\"material-icons \">open_in_new</i><span class=\'card-title align-top \'>DATOS CLIENTE</span></button></div>";
+		// }
+		r += "</div>" // CIERRA EL HEADING;
+		r += "<div id='collapse_card1' class='collapse show' aria-labelledby='heading_card1' style=''>"
+		//*** card 1
+		r += "<div class=\'card-body\' id='card1_body' >";
+		//****  OBRAS
+		if (this._data.obras.length > 0) {
+			// SI HAY CUOTAS RESTANTES O CTA UPC LO PONE EN PANTALLA
+			let ce = this.ctas_estados() 
+			console.log('pendientes',ce);
+			// if (ce) {
+				r += "<div class='title-servicios'><img class=\'jp-icon\' src=\'images/icons/servicios_small.png\'></img> ESTADO DE CUENTA CONTRATACIONES </div>";
+				// TOSDOS LOS SERVICIOS QUE NO SON PRESTAMO
+			r += (ce ? otbl.create(ce, 'tbl_ctas_obras') : 'No existen contrataciones activas...')
+				
+		}
+
+		
+		// // r += this.lote_card();
+		// // r += this.service_cards();
+		// r += "<div class=\'row justify-content-between mb-3\'>";
+		// r += "<div class=\'title-lote d-flex\'>";
+		// r += "<img class=\'jp-icon\' src=\'images/icons/home_blue_small.png\'></img> ESTADO DE CUENTA DEL LOTE " + this._data.lote['lote_nom'];
+		// r += "</div>"
+		// r += "<div class=\'title-lote d-flex\'>";
+		// r += "<a href=\'https://sgt.escobar.gov.ar/pagosDeudaOnline/servlet/com.pagosdeudaescobar.wpdeudaonline\' target=\'_blank\'><button type=\"button\" class=\"btn-normal\" >DEUDA ONLINE</button></a>"
+		// r += "</div>"
+		// r += "<div class=\'title-lote d-flex\' >PARTIDA: ";
+		// r += "<input type=\'text\'  readonly style=\'width:130px;border:0;\' value=\'" + this._data.lote['partida'] + "\' id=\'nro_partida\' />";
+		// r += "<a href=\'#\' onClick='copy_to_clipboard()'><i class=\"material-icons \" title='Copiar al Portapapeles' >file_copy</i></a>"
+		r += "</div></div>" // CIERRO BODY Y CARD 
+
+		// r += this.ctas_lote();
+		// // r += "<hr />";
+
+		r += "<hr />";
+		// //***  ROW DE BUTTONS
+		r += this.get_buttons_bar();
+		
+		r += "</div></div></div></div>" //** CIERRA CARD BODY Y CARD1;
+		return r;
+	},
+	// **********************************************
+	
+	// ************* retorna el dom obj de fecha init 
+	get_fec_init: function () {
+		let r = "<div id=\'btns_pago_srv\' class=\'col d-flex justify-content-end pt-2\'>";
+		r += "<button type=\"button\" id=\"btn_curr_state\" class=\"btn btn-success\">" + pclv(this._data.props.pcles, 'fecha_inicio') + "</button>";
+		r += "</div></div>";
+		return r;
+	},
+	
+	get_header: function () {
+		let r = "";
+		r += "<div class='col d-flex flex-wrap card-title justify-content-center'><i class=\"material-icons \">perm_identity</i>" + pclv(this._data.props.owner_props, 'name') + "</div>";
+		r += "<div class='col d-flex flex-wrap  card-title justify-content-center'><i class=\"material-icons \">phone</i>" + pclv(this._data.props.owner_props, 'telefono') + "</div>";
+		r += "<div class='col d-flex flex-wrap card-title justify-content-center'><i class=\"material-icons \">home</i>" + pclv(this._data.props.owner_props, 'domicilio') + ", " + pclv(this._data.props.owner_props, 'localidad')+"</div>";
+		return r;
+	},
+	//  ******************* botones Ingresar Pago /  New servicio / Print resumende cuenta  ************
+	get_buttons_bar: function () {
+		let r = "";
+		//**** PERMISOS ADMINISTRACION SIN CUOTAS EN MORA
+		if (TOP.permisos < 3) {
+			r += "<div class='row d-flex justify-content-start m-2'>";
+			// BOT INGRESAR / IMPUTAR PAGOS 
+			r += "<button type=\"button\" id=\"bot_pagos\" class=\"btn-normal m-1\" onClick=front_call({method:'set_pagos_a_proveedores',sending:'true',action:'call',steps_back:true})>PAGOS</button>";
+			// BOT NUEVA OBRA
+			r += "<button type=\"button\" id=\"bot_alta_de_obra\" class=\"btn-normal m-1\" onClick=front_call({method:'alta_de_obra',action:'call',sending:true})>NUEVA CONTRATACION </button>";
+			// BOT IMPRIMIR
+			r += "<button type='button' class='btn-normal m-1' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR ESTADO DE CUENTA</button>";
+			r += "</div></div>";
+			r += "</div>"; // CIERRA EL ROW DE BUTTONS
+			return r;
+
+		}
+	},
+	ctas_estados: function () {
+		let ce = []; 
+		for (let oi = 0; oi < this._data.obras.length; oi++) {
+			let pending = []; pagado = [];tot_pending = 0; tot_pagado = 0;
+			for (let i = 0; i < this._data.obras[oi].events.length; i++) {
+				
+				if (pclv(this._data.obras[oi].events[i]['pcles'], 'estado') == 'a_pagar'){
+					pending.push(this._data.obras[oi].events[i]);
+					tot_pending += parseInt(pclv(this._data.obras[oi].events[i]['pcles'], 'monto_cta'));
+				}
+				if (pclv(this._data.obras[oi].events[i]['pcles'], 'estado') == 'pagado'){
+					pagado.push(this._data.obras[oi].events[i])
+					tot_pagado += parseInt(pclv(this._data.obras[oi].events[i]['pcles'], 'monto_pagado'));
+				}
+				
+			}
+			// ce.push({ 'obra': this._data.obras[oi], 'ctas_pending': pending ,'ctas_pagadas':pagado,'tot_pagado':tot_pagado,'tot_pending':tot_pending});
+			ce.push({
+				'OBRA CONTRATADA': this._data.obras[oi]['extra_data'][1]['tipo_obra_id']['name'],
+				'BARRIO': this._data.obras[oi]['extra_data'][0]['barrio_id']['name'],
+				'CUOTAS PAGADAS': pagado.length,
+				'MONTO PAGADO': tot_pagado,
+				'CUOTAS A PAGAR': pending.length,
+				'MONTO A PAGAR': tot_pending,
+			});
+		}
+
+		return ce;
+	},
+
+	get_ctas_pagadas: function(c){
+
+	}
+
+	
+}
+//************************************************
+
+//****** 11 agosto 2020o
 //**** IMPRESION DE RESERVA
 //************************************************
 const reserva = {
   create : function(o){
     let r = '';
-    r += "<div class='row d-flex justify-content-center' ><img src='lpt/images/logo_reserva.png' /></div>";
+    r += "<div class='row d-flex justify-content-center' ><img src='http://54.243.144.74/lotesparatodos/images/logo_reserva.png' /></div>";
     r += "<div class='row d-flex justify-content-between'>";
     r += "<div class='col-7 d-flex justify-content-start'><span align='start' style='font-size:25px;font-weight:500;'>Desarrollo : "+o.desarrollo+"</span></div>";
     r += "<div class='col-5 d-flex justify-content-start'><span align='start' style='font-size:25px;font-weight:500;'>Fecha : "+o.fecha+" </span></div>";
@@ -73,9 +226,6 @@ const reserva = {
 }
 
 
-
-
-// ********************
 
 //****** 28 julio 2020
 //**** IMPRESION DE BOLETO DE COMPRA
@@ -593,7 +743,7 @@ var td_updater = {
 	},
 	set: function(o){
 		let x = '';
-		//  SI EL usuario no es root todo CAMPO ES READONLY
+		//  SI EL CAMPO ES READONLY SOLO PONE EL TEXTO
 		if(TOP.permisos > 0){
 			x += "<td>";
 			x += o.value;
@@ -627,6 +777,8 @@ var td_updater = {
 };
 
 
+
+
 //********* 23 junio 2020 ***************************
 // OBJETO TABLA CON INLINE EDIT USA EDITABLE FUNCT
 // requiere td_updater obj
@@ -642,8 +794,8 @@ const otbl_editable={
 		if(v.data && Array.isArray(v.data)){
 			let r = "<table id='"+v.tblId+"' class='table table-hover table-bordered tabe-sm'>";
 			r += "<thead><tr>";
-			//SI ES USUARIO ROOT PONE EL CHECKBOX PARA BORRAR ROWS EN COL 0
-      if(TOP.permisos === 0 && v.data[0].hasOwnProperty('atom_id') && parseInt(TOP.permisos) <= 2){
+			// CHECKBOX PARA BORRAR ROWS EN COL 0
+      if(v.data[0].hasOwnProperty('atom_id') && parseInt(TOP.permisos) <= 2){
 				r += "<th><a href='#' onClick=front_call({method:'delete_selected',data:{sending:'true'}})>Borrar</a></th>";
 			}
 			// COLUMNAS DEL HEADING
@@ -659,8 +811,8 @@ const otbl_editable={
       if(v.data && Array.isArray(v.data)){
         for (let row in v.data){
           r += "<tr>";
-          //** SI ES USUARIO Root PUEDE BORRAR EL ROW
-          if(parseInt(TOP.permisos) === 0){
+          //** SI ES USUARIO CON PERMISOS PUEDE BORRAR EL ROW
+          if(parseInt(TOP.permisos) <= 2){
             r += this.set_checkbox(v.data[row]);
           }
           // EL RESTO DE LA COLUMNAS
@@ -2019,7 +2171,6 @@ const comprobantes_tbl={
 }
 
 
-
 const tbl={
 	create:function(v,id){
 		let r = '';
@@ -2821,6 +2972,8 @@ var uploaded_files_boxes = {
 */
 
 
+
+
 	// ** RESUMEN DE CUENTA
 var clpsd_cards = {
 	_data:{},
@@ -2868,9 +3021,6 @@ var clpsd_cards = {
 
 	get_header : function(){
 		let r = "";
-		console.log('cotit length',this._data.lote.datos_boleto.cotit_nomap.length);
-		console.log('cotit',this._data.lote.datos_boleto.cotit_nomap);
-
 		r += "<div class='col d-flex flex-wrap card-title justify-content-center'><i class=\"material-icons \">perm_identity</i>" + this._data.lote.datos_boleto.tit_nomap;
 		r += ' '+(this._data.lote.datos_boleto.cotit_nomap.length > 2?" y  "+this._data.lote.datos_boleto.cotit_nomap:'')
 		r += "</div>";
@@ -2887,17 +3037,14 @@ var clpsd_cards = {
 		return this._screen
 	},
 	get_domic : function(){
-
-		return  this.get_gpcle(this._data.lote,'cli_data','domicilio');
+		return  TOP.data.lote.datos_boleto.tit_domic +', '+TOP.data.lote.datos_boleto.tit_localidad;
 	},
 	get_telefono : function(){
-		let t1 = this.get_gpcle(this._data.lote,'cli_data','celular_difusion');
-		let t2 = this.get_gpcle(this._data.lote,'cli_data','celular');
-		let t3 = this.get_gpcle(this._data.lote,'cli_data','telefono');
+		let t1 = TOP.data.lote.datos_boleto.tit_tel
+		let t2 = TOP.data.lote.datos_boleto.tit_cel
 		let r = '';
 		if(t1){r+= t1+", "};
 		if(t2){r+=t2+", "};
-		if(t3){r+=t3};
 		return r;
 	},
 	get_plan : function (){
@@ -3007,7 +3154,7 @@ var clpsd_cards = {
 			}
 		}
 
-		return (isNaN(x)?'error -  get_tot_a_pagar':x);
+		return (isNaN(x)?'error - 2345 get_tot_a_pagar':x);
 	},
 
 	get_cant_a_pagar : function(e,caller){
@@ -3085,7 +3232,12 @@ var clpsd_cards = {
 			}
 
 		}
+		// if(TOP.permisos < 10){
+		// 	tbl_data_lote[0]['ACCIONES'] = this._data.lote.ctas_acciones;
+		// }
+
 		return otbl.create(tbl_data_srv,'tbl_ctas_srv');
+
 	},
 
 	ctas_prest: function(){
@@ -3229,66 +3381,67 @@ var clpsd_cards = {
 
 
 	//  ******************* botones Ingresar Pago /  New servicio / Print resumende cuenta  ************
-	get_buttons_bar : function(){
-		let r = "";
-		//*** LOTE RESCINDIDO
-		if(this._data.lote.rscn_data && this._data.lote.curr_state == 'RESCINDIDO'){
-			r +="<div class='row d-flex justify-content-between mb-2'>" ;
-			//  BOT SUBIR ARCHIVO
-			r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
-			// BOT IMPRIMIR
-			r +="<button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
-			r += "</div>";
-			return r;
-		}
-		//**** PERMISOS USUARIOS OFICINA SOLO SUBIR ARCHIVOS O IMPRIMIR
-		if(TOP.permisos == 3){
-			r +="<div class='row d-flex justify-content-between mb-2'>";
-			//  BOT SUBIR ARCHIVO
-			r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
-			// BOT IMPRIMIR
-			r +="<button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
-			r += "</div>";
-			// BOT IMPRIMIR BOLETO
-			r +="<button type='button' class='btn-normal' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
+  get_buttons_bar : function(){
+    let r = "";
+    //*** LOTE RESCINDIDO
+    if(this._data.lote.rscn_data && this._data.lote.curr_state == 'RESCINDIDO'){
+      r +="<div class='row d-flex justify-content-between mb-2'>" ;
+      //  BOT SUBIR ARCHIVO
+      r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
+      // BOT IMPRIMIR
+      r +="<button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
+      r += "</div>";
+      return r;
+    }
+    //**** PERMISOS USUARIOS OFICINA SOLO SUBIR ARCHIVOS O IMPRIMIR
+    if(TOP.permisos == 3){
+      r +="<div class='row d-flex justify-content-between mb-2'>";
+      //  BOT SUBIR ARCHIVO
+      r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
+      // BOT IMPRIMIR
+      r +="<button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
+      r += "</div>";
+      // BOT IMPRIMIR BOLETO
+      r +="<button type='button' class='btn-normal' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
       if(this._data.lote.datos_reserva){
         r +="<button type='button' class='btn-normal' id='print_button_reserva' onclick=front_call({method:'print_reserva',sending:false})>IMPRIMIR RESERVA</button>";
       }
 
 
-			r += "</div>";
+      r += "</div>";
 
-			return r;
-		}
+      return r;
+    }
 
 
 
-		//**** PERMISOS ADMINISTRACION SIN CUOTAS EN MORA
-		if(TOP.permisos < 5 && this._data.lote.ctas_mora.events.length < 4 ){
-			r +="<div class='row d-flex justify-content-start mb-2'>";
-			// DISPONIBLE DE CREDITO
-			r +="<div class\'col-sm-4 col-md-2 \'><div class=\' p-3 text-center\'>Credito Disponible: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div></div>";
-			r += "<div class\'col-sm-8 col-md-10 \'>"
-			// BOT CUOTAS
-			r += "<button type=\"button\" id=\"bot_pago\" class=\"btn-normal m-1\" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>CUOTAS PENDIENTES</button>";
-			// BOT SERVICIO
-			r += "<button type=\"button\" id=\"bot_new_service\" class=\"btn-normal m-1\" onClick=front_call({method:'new_service_elem',action:'call',sending:true})>NUEVO SERVICIO</button>";
-			// BOT REFINANCIAR
-			r += "<button type=\"button\" id=\"bot_new_service\" class=\"btn-normal m-1\" onClick=front_call({method:'refinanciar',action:'call',sending:false})>REFINANCIAR CUOTA</button>";
-			// r += "<div class='row d-flex justify-content-start mb-2'>";
-			//  BOT SUBIR ARCHIVO
-			if(top.user_id == 502){
-				r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>SUBIR ARCHIVO COMO CLIENTE</button>";
-			}
-			r += "<button type='button' class=\'btn-normal\' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
-			// BOT COMUNICADOS INTERNOS
-			// r += "<button type='button' class=\'btn-normal\' id='send_msg' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>NUEVO MENSAGE</button>";
-			// BOT IMPRIMIR
-			r +="<button type='button' class='btn-normal m-1' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
-			r += "</div></div>";
-			// BOT IMPRIMIR BOLETO
-			r +="<button type='button' class='btn-normal mr-2' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
+    //**** PERMISOS ADMINISTRACION SIN CUOTAS EN MORA
+    if(TOP.permisos < 5 && this._data.lote.ctas_mora.events.length < 4 ){
+      r +="<div class='row d-flex justify-content-start mb-2'>";
+      // DISPONIBLE DE CREDITO
+      r +="<div class\'col-sm-4 col-md-2 \'><div class=\' p-3 text-center\'>Credito Disponible: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div></div>";
+      r += "<div class\'col-sm-8 col-md-10 \'>"
+      // BOT CUOTAS
+      r += "<button type=\"button\" id=\"bot_pago\" class=\"btn-normal m-1\" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>CUOTAS PENDIENTES</button>";
+      // BOT SERVICIO
+      r += "<button type=\"button\" id=\"bot_new_service\" class=\"btn-normal m-1\" onClick=front_call({method:'new_service_elem',action:'call',sending:true})>NUEVO SERVICIO</button>";
+      // BOT REFINANCIAR
+      r += "<button type=\"button\" id=\"bot_new_service\" class=\"btn-normal m-1\" onClick=front_call({method:'refinanciar',action:'call',sending:false})>REFINANCIAR CUOTA</button>";
+      // r += "<div class='row d-flex justify-content-start mb-2'>";
+      //  BOT SUBIR ARCHIVO
+      if(top.user_id == 502){
+        r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>SUBIR ARCHIVO COMO CLIENTE</button>";
+      }
+      r += "<button type='button' class=\'btn-normal\' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
+      // BOT COMUNICADOS INTERNOS
+      // r += "<button type='button' class=\'btn-normal\' id='send_msg' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>NUEVO MENSAGE</button>";
+      // BOT IMPRIMIR
+      r +="<button type='button' class='btn-normal m-1' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
+      r += "</div></div>";
+      // BOT IMPRIMIR BOLETO
+      r +="<button type='button' class='btn-normal mr-2' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
       // BOT IMPRIMIR RESERVA
+      // console.log('rs',TOP.data.datos_reserva);
       if(TOP.data.datos_reserva){
         r +="<button type='button' class='btn-normal mr-2' id='print_button_reserva' onclick=front_call({method:'print_reserva',sending:false})>IMPRIMIR RESERVA</button>";
       }
@@ -3297,125 +3450,131 @@ var clpsd_cards = {
 
 
 
-			return r;
+      return r;
 
-		}
-		//**** PERMISOS ADMINISTRACION HAY CUOTAS EN MORA
-		if(TOP.permisos < 5 && this._data.lote.ctas_mora.events.length > 3 ){
-			r +="<div class='row d-flex justify-content-between mb-2'>";
-			// DISPONIBLE DE CREDITO
-			r +="<div class=\' p-3 text-center\'>Credito Disponible: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div>";
-			// BOT CUOTAS
-			r += "<button type=\"button\" id=\"bot_pago\" class=\"btn-danger m-1\" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true}) >CUOTAS PENDIENTES (MAS DE 3 CUOTAS EN MORA)</button>";
-			// r += "<button type=\"button\" id=\"bot_pago\" class=\"btn-secondary m-1\" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>Cuotas Pendientes</button>";
-			// BOT SERVICIO
-			r += "<button type=\"button\" id=\"bot_new_service\" class=\"btn-normal m-1\" onClick=front_call({method:'new_service_elem',action:'call',sending:true})>NUEVO SERVICIO</button>";
-			//  BOT SUBIR ARCHIVO
-			if(top.user_id == 502){
-				r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>SUBIR ARCHIVO COMO CLIENTE</button>";
-			}
-			r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
-			// BOT COMUNICADOS INTERNOS
-			// r += "<button type='button' class='btn-normal m-1 ' id='button_send_msg' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>NUEVO MENSAGE</button>";
-			// BOT IMPRIMIR
-			r +="<button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
-			r += "</div>";
-			// BOT IMPRIMIR BOLETO
-			r +="<button type='button' class='btn-normal mr-2' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
+    }
+    //**** PERMISOS ADMINISTRACION HAY CUOTAS EN MORA
+    if(TOP.permisos < 5 && this._data.lote.ctas_mora.events.length > 3 ){
+      r +="<div class='row d-flex justify-content-between mb-2'>";
+      // DISPONIBLE DE CREDITO
+      r +="<div class=\' p-3 text-center\'>Credito Disponible: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div>";
+      // BOT CUOTAS
+      r += "<button type=\"button\" id=\"bot_pago\" class=\"btn-danger m-1\" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true}) >CUOTAS PENDIENTES (MAS DE 3 CUOTAS EN MORA)</button>";
+      // r += "<button type=\"button\" id=\"bot_pago\" class=\"btn-secondary m-1\" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>Cuotas Pendientes</button>";
+      // BOT SERVICIO
+      r += "<button type=\"button\" id=\"bot_new_service\" class=\"btn-normal m-1\" onClick=front_call({method:'new_service_elem',action:'call',sending:true})>NUEVO SERVICIO</button>";
+      //  BOT SUBIR ARCHIVO
+      if(top.user_id == 502){
+        r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>SUBIR ARCHIVO COMO CLIENTE</button>";
+      }
+      r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
+      // BOT COMUNICADOS INTERNOS
+      // r += "<button type='button' class='btn-normal m-1 ' id='button_send_msg' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>NUEVO MENSAGE</button>";
+      // BOT IMPRIMIR
+      r +="<button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMIR EL ESTADO DE CUENTA</button>";
+      // r += "</div>";
+      // BOT IMPRIMIR BOLETO
+      r +="<button type='button' class='btn-normal mr-2' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
       // BOT IMPRIMIR RESERVA
-
       if(this._data.lote.datos_reserva){
         r +="<button type='button' class='btn-normal mr-2' id='print_button_reserva' onclick=front_call({method:'print_reserva',sending:false})>IMPRIMIR RESERVA</button>";
       }
 
       r += "</div>";
 
-			return r;
-		}
+      return r;
+    }
 
-		//**** PERMISOS USUARIOS VENTAS
-		if(TOP.permisos == 10){
-			// ROW BOTON DE PAGOS
-			r += "<div class=\'row text-center mb-2\'>"
-			r +="<div class=\'col\'>"
-			// if(sinCtasEnMora(this._data)){
-				r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-normal \" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>ESTADO DE CUOTAS</button></a><br/>";
-				// r +="<div class=\' pl-3 pr-3 text-center small\'>Adelanta cuotas y obtené un descuento sobre tu plan, llevás ahorrado: "+accounting.formatMoney(parseFloat(TOP.ahorrado_tot), "$ ", 0, ".", ",")+"</div>";
-			// }else{
-				// r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-alerta\" >CONTACTESE CON ADMINISTRACION AL NUMERO 11 3359-8458</button></a><br/>";
-			// }
-			r +="</div></div>"
-			// CLOSE ROW
-			// ROW CONSULTAS
-			r += "<hr/>";
-			r +="<div class='row d-flex justify-content-between mb-3'>";
-			r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
-			r +="<a href=\'http://api.whatsapp.com/send?phone=5491145260488&amp;text=Hola%20quiero%20mas%20info%20sobre%20un%20prestamo%20que%20vi%20en%20la%20web%20de%20LotesParaTodos\' target='_blank'><button type='button' class='btn-prestamo' id='button_whatsapp' onclick=\"\">CONSULTANOS POR WHATSAPP YA!</button></a>"
-			r +="<div class=\' pl-3 pr-3 text-center small\'>Tenés preaprobado un préstamo de hasta: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div>";
-			r +="</div>";
-			r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
-			// r += "<a href=\'#\'><button type='button' class='btn-normal ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>ENVIAR COMPROBANTE DE PAGO</button></a>";
-			// r +="<div class=\' pl-3 pr-3 text-center small\'>Subí tu comprobante de pago para actualizar tu cuenta.</div>";
-			//  BOTON SUBIR ARCHIVO
-			r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
-			r +="</div>"
-			// r += "<button type='button' class='btn-secondary m-2 ' id='button_cli_file_upload' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>Comunicate con nosotros</button>";
-			// r += "</div>";
-			r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
-			r +="<a href=\'#\'><button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMÍ EL ESTADO DE CUENTA</button></a>";
-			r +="<div class=\' pl-3 pr-3 text-center small\'>Descargá el estado de cuenta y guardalo o imprimilo.</div>";
-			r +="</div></div><hr/>"
-			return r;
+    //**** PERMISOS USUARIOS VENTAS
+    if(TOP.permisos == 10){
+      // ROW BOTON DE PAGOS
+      r += "<div class=\'row text-center mb-2\'>"
+      //  BOTON DE PAGOS PENDIENTES
+      r +="<div class=\'col\'>"
+      // if(sinCtasEnMora(this._data)){
+      r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-normal \" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>ESTADO DE CUOTAS</button></a>";
+      r +="</div>";
+        // r +="<div class=\' pl-3 pr-3 text-center small\'>Adelanta cuotas y obtené un descuento sobre tu plan, llevás ahorrado: "+accounting.formatMoney(parseFloat(TOP.ahorrado_tot), "$ ", 0, ".", ",")+"</div>";
+      // }else{
+        // r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-alerta\" >CONTACTESE CON ADMINISTRACION AL NUMERO 11 3359-8458</button></a><br/>";
+      // }
+      // BOT IMPRIMIR RESUMEN DE CUENTA
+      // BOT IMPRIMIR BOLETO
+      r +="<div class=\'col\'>"
+      r +="<button type='button' class='btn-normal mr-2' id='print_button_boleto' onclick=front_call({method:'print_boleto',sending:false})>IMPRIMIR BOLETO</button>";
+      r += "</div>";
+      // BOT IMPRIMIR RESERVA
+      if(this._data.datos_reserva){
+        r +="<div class=\'col\'>"
+        r +="<button type='button' class='btn-normal mr-2' id='print_button_reserva' onclick=front_call({method:'print_reserva',sending:false})>IMPRIMIR RESERVA</button>";
+        r += "</div>";
+      }
+      r +="</div>"
+      // CLOSE ROW
+      // ROW CONSULTAS
+      r += "<hr/>";
+      r +="<div class='row d-flex justify-content-between mb-3'>";
+      r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
+      r +="<a href=\'http://api.whatsapp.com/send?phone=5491145260488&amp;text=Hola%20quiero%20mas%20info%20sobre%20un%20prestamo%20que%20vi%20en%20la%20web%20de%20LotesParaTodos\' target='_blank'><button type='button' class='btn-prestamo' id='button_whatsapp' onclick=\"\">CONSULTANOS POR WHATSAPP YA!</button></a>"
+      r +="<div class=\' pl-3 pr-3 text-center small\'>Tenés preaprobado un préstamo de hasta: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div>";
+      r +="</div>";
+      r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
+      // r += "<a href=\'#\'><button type='button' class='btn-normal ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>ENVIAR COMPROBANTE DE PAGO</button></a>";
+      // r +="<div class=\' pl-3 pr-3 text-center small\'>Subí tu comprobante de pago para actualizar tu cuenta.</div>";
+      //  BOTON SUBIR ARCHIVO
+      r += "<button type='button' class='btn-normal m-1 ' id='button_file_upload' onClick=front_call({method:'lotes_file_upload',sending:false})>SUBIR ARCHIVO</button>";
+      r +="</div>"
+      // r += "<button type='button' class='btn-secondary m-2 ' id='button_cli_file_upload' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>Comunicate con nosotros</button>";
+      // r += "</div>";
+      r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
+      r +="<a href=\'#\'><button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMÍ EL ESTADO DE CUENTA</button></a>";
+      r +="<div class=\' pl-3 pr-3 text-center small\'>Descargá el estado de cuenta y guardalo o imprimilo.</div>";
+      r +="</div></div><hr/>"
+      return r;
 
-		}
+    }
+    //**** PERMISOS USUARIOS WEB CLI
+    if(TOP.permisos > 10){
+      // ROW BOTON DE PAGOS
+      r += "<div class=\'row text-center mb-2\'>";
+      r +="<div class=\'col\'>";
+      let estado_ctas = sinCtasEnMora(this._data)
+      console.log('estado',estado_ctas);
+      if(estado_ctas === true){
+        r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-normal \" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>PAGAR CUOTAS ONLINE</button></a><br/>";
+        r +="<div class=\' pl-3 pr-3 text-center small\'>Adelanta cuotas y obtené un descuento sobre tu plan, llevás ahorrado: "+accounting.formatMoney(parseFloat(TOP.ahorrado_tot), "$ ", 0, ".", ",")+"</div>";
+      }else if(estado_ctas && estado_ctas.indexOf('servicios_en_mora') > -1){
+        r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-alerta \" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>PAGAR CUOTAS ONLINE ("+estado_ctas+")</button></a><br/>";
+        r +="<div class=\' pl-3 pr-3 text-center small\'>Adelanta cuotas y obtené un descuento sobre tu plan, llevás ahorrado: "+accounting.formatMoney(parseFloat(TOP.ahorrado_tot), "$ ", 0, ".", ",")+"</div>";
+      }
+      else{
+        r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-alerta\" >CONTACTESE CON ADMINISTRACION AL NUMERO 11 3359-8458</button></a><br/>";
+      }
+      r +="</div></div>"
+      // CLOSE ROW
+      // ROW CONSULTAS
+      r += "<hr/>";
+      r +="<div class='row d-flex justify-content-between mb-3'>";
+      r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
+      r +="<a href=\'http://api.whatsapp.com/send?phone=5491145260488&amp;text=Hola%20quiero%20mas%20info%20sobre%20un%20prestamo%20que%20vi%20en%20la%20web%20de%20LotesParaTodos\' target='_blank'><button type='button' class='btn-prestamo' id='button_whatsapp' onclick=\"\">CONSULTANOS POR WHATSAPP YA!</button></a>"
+      r +="<div class=\' pl-3 pr-3 text-center small\'>Tenés preaprobado un préstamo de hasta: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div>";
+      r +="</div>";
+      r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
+      r += "<a href=\'#\'><button type='button' class='btn-normal ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>ENVIAR COMPROBANTE DE PAGO</button></a>";
+      r +="<div class=\' pl-3 pr-3 text-center small\'>Subí tu comprobante de pago para actualizar tu cuenta.</div>";
+      r +="</div>"
+      // r += "<button type='button' class='btn-secondary m-2 ' id='button_cli_file_upload' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>Comunicate con nosotros</button>";
+      // r += "</div>";
+      r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
+      r +="<a href=\'#\'><button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMÍ EL ESTADO DE CUENTA</button></a>";
+      r +="<div class=\' pl-3 pr-3 text-center small\'>Descargá el estado de cuenta y guardalo o imprimilo.</div>";
+      r +="</div></div><hr/>"
+      return r;
 
+    }
 
-
-		//**** PERMISOS USUARIOS WEB CLI
-		if(TOP.permisos > 10){
-			// ROW BOTON DE PAGOS
-			r += "<div class=\'row text-center mb-2\'>";
-			r +="<div class=\'col\'>";
-			let estado_ctas = sinCtasEnMora(this._data)
-			console.log('estado',estado_ctas);
-			if(estado_ctas === true){
-				r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-normal \" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>PAGAR CUOTAS ONLINE</button></a><br/>";
-				r +="<div class=\' pl-3 pr-3 text-center small\'>Adelanta cuotas y obtené un descuento sobre tu plan, llevás ahorrado: "+accounting.formatMoney(parseFloat(TOP.ahorrado_tot), "$ ", 0, ".", ",")+"</div>";
-			}else if(estado_ctas && estado_ctas.indexOf('servicios_en_mora') > -1){
-				r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-alerta \" onClick=front_call({method:'set_pago_cuotas',sending:'true',action:'call',steps_back:true})>PAGAR CUOTAS ONLINE ("+estado_ctas+")</button></a><br/>";
-				r +="<div class=\' pl-3 pr-3 text-center small\'>Adelanta cuotas y obtené un descuento sobre tu plan, llevás ahorrado: "+accounting.formatMoney(parseFloat(TOP.ahorrado_tot), "$ ", 0, ".", ",")+"</div>";
-			}
-			else{
-				r += "<a href=\'#\'><button type=\"button\" id=\"bot_pago\" class=\"btn-alerta\" >CONTACTESE CON ADMINISTRACION AL NUMERO 11 3359-8458</button></a><br/>";
-			}
-			r +="</div></div>"
-			// CLOSE ROW
-			// ROW CONSULTAS
-			r += "<hr/>";
-			r +="<div class='row d-flex justify-content-between mb-3'>";
-			r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
-			r +="<a href=\'http://api.whatsapp.com/send?phone=5491145260488&amp;text=Hola%20quiero%20mas%20info%20sobre%20un%20prestamo%20que%20vi%20en%20la%20web%20de%20LotesParaTodos\' target='_blank'><button type='button' class='btn-prestamo' id='button_whatsapp' onclick=\"\">CONSULTANOS POR WHATSAPP YA!</button></a>"
-			r +="<div class=\' pl-3 pr-3 text-center small\'>Tenés preaprobado un préstamo de hasta: "+accounting.formatMoney(parseFloat(this._data.lote.mto_reintegro), "$ ", 0, ".", ",")+"</div>";
-			r +="</div>";
-			r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
-			r += "<a href=\'#\'><button type='button' class='btn-normal ' id='button_file_upload' onClick=front_call({method:'cli_file_upload',sending:false})>ENVIAR COMPROBANTE DE PAGO</button></a>";
-			r +="<div class=\' pl-3 pr-3 text-center small\'>Subí tu comprobante de pago para actualizar tu cuenta.</div>";
-			r +="</div>"
-			// r += "<button type='button' class='btn-secondary m-2 ' id='button_cli_file_upload' onClick=front_call({method:'send_msg',sending:false,action:'observacion'})>Comunicate con nosotros</button>";
-			// r += "</div>";
-			r +="<div class=\'col d-flex flex-wrap justify-content-around\'>"
-			r +="<a href=\'#\'><button type='button' class='btn-normal' id='print_button_res_cta' onclick=\"print_resumen_de_cta()\">IMPRIMÍ EL ESTADO DE CUENTA</button></a>";
-			r +="<div class=\' pl-3 pr-3 text-center small\'>Descargá el estado de cuenta y guardalo o imprimilo.</div>";
-			r +="</div></div><hr/>"
-			return r;
-
-		}
-
-
-	},
-
-
-		//  *** SERVICIOS CARD
+  },
+	//  *** SERVICIOS CARD
 	service_cards : function(){
 		var r = '';
 		for (var i = 0 ; i < this._data.srv.length ; i ++){
@@ -3466,7 +3625,6 @@ var clpsd_cards = {
 	//  *****************************************
 
 	// ************** CARD 1 OK *****************
-
 	get_card1: function(){
 		let r ='';
 		//*** ROW STATE AND FEC INIT
@@ -3475,7 +3633,7 @@ var clpsd_cards = {
 		}
 		// es cliente web
 		if(TOP.permisos >= 10){
-			r+="<div class=\'row d-flex justify-content-between mb-1 p-2\'><div class='col'><img src='/images/logo_LPT1.svg'></div><div class='col text-right'><a href='https://lotesparatodos.com.ar'>Hola <br/>cerrar sesión</a></p></div></div>";
+			r+="<div class=\'row d-flex justify-content-between mb-1 p-2\'><div class='col'><img src='images/logo_LPT1.svg'></div><div class='col text-right'><a href='https://lotesparatodos.com.ar'>Hola "+this._data.lote.cli_atom_name+"<br/>cerrar sesión</a></p></div></div>";
 		}
 
 		//*** LOTES CARD
@@ -3517,13 +3675,7 @@ var clpsd_cards = {
 				// TOSDOS LOS SERVICIOS QUE NO SON PRESTAMO
 				r += (this.ctas_srv()?this.ctas_srv():'No existen servicios activos...')
 				// TODOS LOS PRESTAMOS
-
-				// for (let c = 0 ; c < t.length ; c ++){
-					// if(this._data.srv[i].srvc_name.indexOf('Prestamo') == 0 ){
-						// ****  PRESTAMOS
-						r += this.ctas_prest()
-					// }
-				// }
+        		r += this.ctas_prest()
 			}
 		}
 		r += "<hr />";
@@ -3619,7 +3771,7 @@ var clpsd_cards = {
 		r += "Numero de Lote: "+this._data.lote.lote_nom+"<br/>"
 		r += "Plan de Financiación: "+this._data.lote.financ+"<br/>";
 		r += "Fecha de Inicio del plan:  "+this._data.lote.fec_init + "</h5></div>"
-		r +="<div class='col-3 d-flex justify-content-end'><img src=\"/images/logo_LPT1.svg\"></div>"
+		r +="<div class='col-3 d-flex justify-content-end'><img src=\"images/logo_LPT1.svg\"></div>"
 		r += "</div>"
 		//*** LOTE Y SERVICIOS
 		r += "<div class=\'card-body\'>";
@@ -3777,8 +3929,8 @@ var pgc = {
 		<div class=\"row d-flex justify-content-between\">\
 		<div class=\"col-sm-2 col-md-1 \"><button type=\"button\" onClick=front_call({'method':'hist_home'}) class=\"btn-normal\"><i class=\"material-icons \">arrow_back_ios</i> </button></div>\
 		<div class=\"col-xs-8 col-lg-9\">";
-		this._screen += "<h3 >"+this._data.lote.lote_nom+ " "+ this.get_gpcle(this._data.lote,'cli_data','nombre')
-		this._screen += " "+(this.get_gpcle(this._data.lote,'cli_data','apellido')== undefined?'':this.get_gpcle(this._data.lote,'cli_data','apellido'))
+		this._screen += "<h3 >"+this._data.lote.lote_nom+ " "+ TOP.data.lote.datos_boleto.tit_nomap
+		// this._screen += " "+(this.get_gpcle(this._data.lote,'cli_data','apellido')== undefined?'':this.get_gpcle(this._data.lote,'cli_data','apellido'))
 		this._screen +="<h3>";
 		this._screen +="</div></div><div class=\"row d-flex justify-content-between\">"
 		this._screen += "<div class=\"col\"><legend class=\'align-baseline\'>"
@@ -3958,7 +4110,7 @@ var rec_pgc = {
 	},
 	set: function (){
 		this._print ="<font size=\"+2\"><div class=\"container-fluid p-4\"><div class=\"row\">";
-		this._print +="<div class=\"col\"><img src=\"http://localhost/lpt/images/logo_recibo.jpg\"></div>";
+		this._print +="<div class=\"col\"><img src=\"http://54.243.144.74/lotesparatodos/images/logo_recibo.jpg\"></div>";
 		this._print +="<div class=\"col\"><p></p><legend><p>RECIBO NRO.: "+TOP.curr_rec.recibo_nro+"</p>";
 		this._print +="<p>FECHA: "+moment(TOP.curr_rec.fecha_pago).format('D/M/YYYY')+"</p></legend></div></div>";
 		this._print +="<div class=\"row\"><div class=\"col\"><p>Lote: "+TOP.curr_rec.nom_lote+"</p>"
@@ -4059,6 +4211,33 @@ const alert={
 
 	}
 };
+
+// ****** ****************** ***********  ***********
+// ** INPUT WINDOW para obtener resumen de cuenta de proveedor
+// ****** ****************** ***********  ***********
+var get_proveedor_input = {
+	_data: {},
+	_screen: {},
+	create: function (val) {
+		var obj = Object.create(this);
+		obj.set(val);
+		return obj;
+	},
+	get: function (val) {
+		return this._data[val];
+	},
+	get_screen: function () { return this._screen },
+	set: function (v) {
+		this._data = v;
+		this._screen = "\
+		<div class=\"form-group\">\
+		<label class=\"col-form-label\" for=\"prov\">Nombre del proveedor</label>\
+		<input type=\"text\" class=\"form-control\" placeholder=\"Ingresa el nombre del proveedor \" id=\"prov\">\
+		</div>"
+	}
+};
+
+
 
 // ****** ****************** ***********  ***********
 // ** INPUT WINDOW
@@ -5015,7 +5194,7 @@ var text_obj_updater = {
 		this._oid = v.id;
 		x += voc.create(v);
 		x += "<input type='text' id='"+this._oid+"' class='form-control' ";
-		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?'readonly=\'\'': '')
+		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?'readonly=\'\' disabled': '')
 		x += " value ='"+(v.value!=null?v.value:'')+"'  style='width: 230px;'";
 
 		x += " onChange='"+(v.hasOwnProperty('front_call')?"front_call("+JSON.stringify(v.front_call)+")":null)+"' >";
@@ -5044,7 +5223,7 @@ var number_obj_updater = {
 		x += "<label class='col-form-label' for='"+this._oid+"' style='text-transform:capitalize;'>";
 		x += (v.title == ''?v.label.charAt(0).toUpperCase() + v.label.slice(1):v.title)+"</label>";
 		x += "<input type='number' id='"+this._oid+"' class='form-control' ";
-		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?'readonly=\'\'': '')
+		x += (v.hasOwnProperty('readonly') && v.readonly == true ?'readonly=\'\' disabled ': '')
 		x += " value ='"+(v.value!=null?v.value:'')+"'  style='width: 230px;'";
 		// si esta en update screen y tiene la llamada de update a front_call o
 		// solo valida el campo para el caso en que el label este contemplado
@@ -5081,7 +5260,7 @@ var date_obj_updater={
 		x += voc.create(v);
 		x +="<div class=\"input-group date\" >";
 		x +="<input type='text' class='form-control' id='"+this._oid+"' value='"+v.value+"'";
-		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?'disabled=\'\' readonly=\'\' ': '');
+		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?'disabled readonly=\'\' ': '');
 		x +="placeholder=\"Selecciona una fecha\" onblur=";
 		x += (v.hasOwnProperty('front_call')? "front_call(" + JSON.stringify(v.front_call).replace(/"/g,"'") + ")":'')+" >" ;
 		x +="</div>";
@@ -5107,7 +5286,7 @@ var select_obj_updater = {
 		let x = voc.create(v);
 
 		x +="<select class=\"form-control\" id=\""+this._oid+"\""
-		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?" disabled=\'\' readonly=\'\' ": '');
+		x += (v.hasOwnProperty('readonly')&&v.readonly == true ?" disabled readonly=\'\' ": '');
 		x += " onChange='"+(v.hasOwnProperty('front_call')?"front_call("+JSON.stringify(v.front_call)+")":null)+"' style=\'width: 230px;\' >";
 		x +=  "<option value='-1'>Selecciona</option>";
 		// console.log('selects',TOP.selects);
@@ -5123,6 +5302,8 @@ var select_obj_updater = {
   	    this._screen = x;
   	}
 }
+
+
 
 
 
@@ -5493,33 +5674,33 @@ var select_obj = {
   	    }
   	}
 
-		var select_multiple_obj = {
-			_screen:'',
-			create:function(val){
-				var obj = Object.create(this);
-				obj.set(val);
-				return obj;
-			},
-			get_screen:function(){return this._screen},
-			set: function(v){
-				this._screen ="<div class=\"d-flex align-content-start flex-wrap p-1 m-1 \"><div class=\"form-group\">";
-				if(v.title != 'no_title'){
-					this._screen +="<label class=\"col-form-label\"  for=\""+v.label+" style=\"text-transform:capitalize;\">"+(v.title == null?v.label : v.title)+"</label>";
+var select_multiple_obj = {
+	_screen:'',
+	create:function(val){
+		var obj = Object.create(this);
+		obj.set(val);
+		return obj;
+	},
+	get_screen:function(){return this._screen},
+	set: function(v){
+		this._screen ="<div class=\"d-flex align-content-start flex-wrap p-1 m-1 \"><div class=\"form-group\">";
+		if(v.title != 'no_title'){
+			this._screen +="<label class=\"col-form-label\"  for=\""+v.label+" style=\"text-transform:capitalize;\">"+(v.title == null?v.label : v.title)+"</label>";
+		}
+		this._screen +="<select multiple class=\"form-control\" id=\""+v.label+"\" onChange=check_select(\""+v.label+"\") style=\'width: 230px;\' ><option value='-1'>Selecciona</option>";
+		var x = v.label;
+		if(TOP.hasOwnProperty('selects')){
+			// console.log('selector_obj',TOP.selects)
+			if(TOP.selects[x] != undefined){
+				for (var i = 0; i < TOP.selects[x].length; i++) {
+					var sl = (TOP.selects[x][i].id == v.value)?"selected=\"selected\"":" ";
+					this._screen += "<option value="+TOP.selects[x][i].id+" "+sl+" > "+TOP.selects[x][i].lbl+"</option>";
 				}
-				this._screen +="<select multiple class=\"form-control\" id=\""+v.label+"\" onChange=check_select(\""+v.label+"\") style=\'width: 230px;\' ><option value='-1'>Selecciona</option>";
-				var x = v.label;
-				if(TOP.hasOwnProperty('selects')){
-		  	    		// console.log('selector_obj',TOP.selects)
-		  	    		if(TOP.selects[x] != undefined){
-		  	    			for (var i = 0; i < TOP.selects[x].length; i++) {
-		  	    				var sl = (TOP.selects[x][i].id == v.value)?"selected=\"selected\"":" ";
-		  	    				this._screen += "<option value="+TOP.selects[x][i].id+" "+sl+" > "+TOP.selects[x][i].lbl+"</option>";
-		  	    			}
-		  	    		}
-		  	    	}
-		  	    	this._screen +="</select></div></div>";
-		  	    }
-		  	}
+			}
+		}
+		this._screen +="</select></div></div>";
+	}
+}
 
 // *** END CURRENT WORKING DUPLICATED OBJECT DE PANTALLA
 
@@ -5618,41 +5799,20 @@ const editable_set = {
 				}
 				//** DO ELEMENTS UPDATE
 				if(i.hasOwnProperty('elements_id')){
-					switch(i.label){
-						case 'fec_ini':
-							// console.log('edit fec ini');
-							i.front_call = {
-								method:'pcle_updv_fec_ini',
-								sending:false,
-								// pcle_id:i.label+"_"+i.id,
-								data:{
-									type:"Element",
-									pcle_id:i.id,
-									prnt_id:i.elements_id,
-									// id_id:i.id,
-									// LID -> LOCAL ID ES EL ID DEL INPUT EN PANTALLA
-									lid:i.label+"_"+i.id
-								}
-							};
-						break;
-						default:
-							i.front_call = {
-								method:'pcle_updv_cnfg',
-								sending:true,
-								// pcle_id:i.id,
-								// prnt_id:i.atom_id,
-								data:{
-									type:"Element",
-									prnt_id:i.elements_id,
-									pcle_id:i.id,
-									// prnt_id:i.atom_id,
-									// LID -> LOCAL ID ES EL ID DEL INPUT EN PANTALLA
-									lid:i.label+"_"+i.id
-								}
-							};
-						break;
-					}
-
+					i.front_call = {
+						method: 'pcle_updv_cnfg',
+						sending: true,
+						// pcle_id:i.id,
+						// prnt_id:i.atom_id,
+						data: {
+							type: "Element",
+							prnt_id: i.elements_id,
+							pcle_id: i.id,
+							// prnt_id:i.atom_id,
+							// LID -> LOCAL ID ES EL ID DEL INPUT EN PANTALLA
+							lid: i.label + "_" + i.id
+						}
+					};
 				}
 				//*** DO ATOM PCLES UPDATE
 				if(i.hasOwnProperty('atom_id')){

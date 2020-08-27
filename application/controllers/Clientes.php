@@ -104,19 +104,30 @@ class Clientes extends CI_Controller {
             ['call'=>['method'=>'get_elements','sending'=>false,'action'=>'call','data'=>0],'tag'=>'Resumen de Cuenta'],
             ['call'=>['method'=>'new_contrato_elem','sending'=>true,'action'=>'call','data'=>0],'tag'=>'Venta de lote'],
             ['call'=>['method'=>'call_new_atom','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Alta de Cliente'],
+            ['call'=>['method'=>'listado','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Listado de Clientes'],
+            ['call'=>['method'=>'get_saldos','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Saldos en Cuenta'],
+            // ['call'=>['method'=>'cli_by_id','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Perfil Cliente'],
         ];
-        if(intval($u['user_permisos']) < 4 ){
-            if($u['user_id'] == 501 || $u['user_id'] == 484){
-                $btns[] = ['call'=>['method'=>'listado','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Listado de Clientes'];
-                $btns[] = ['call'=>['method'=>'get_saldos','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Saldos en Cuenta'];
-            }
-            if($u['user_id'] == 501 || $u['user_id'] == 498 || $u['user_id'] == 499 || $u['user_id'] == 502){
-                $btns[] = ['call'=>['method'=>'get_saldos','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Saldos en Cuenta'];
-            }
-            return $btns;
+
+
+        if(intval($u['user_permisos']) <= 10 ){
+          // inactivo todos los users de
+          // root users
+            // if($u['user_id'] == 501 || $u['user_id'] == 484){
+            //     $r = $btns;
+            // }
+            // // users oficina
+            // if($u['user_id'] == 498 || $u['user_id'] == 499 || $u['user_id'] == 502){
+            //   $r = $btns;
+            // }
+          $r = $btns;
         }
         else{
             $r = [$btns[0]];
+            // if(intval($u['user_permisos']) === 100){
+              // si es un usuario web trae los datos de sus titulares
+            //   $r[]= ['call'=>['method'=>'cli_by_id','sending'=>true,'action'=>'call','type_text'=>'CLIENTE','data'=>0],'tag'=>'Perfil Cliente'];
+            // }
         }
         return $r;
     }
@@ -124,7 +135,7 @@ class Clientes extends CI_Controller {
     //****** 07 agosto 2020
     //**** LISTADO EDITABLE DE CLIENTES
     //************************************************
-     function listado(){
+    function listado(){
       $d = [];
       $pr = $this->Mdb->db->query("SELECT atom_id as atom_id ,
           MAX(CASE WHEN label = 'id'  THEN value END) AS 'nombre',
@@ -218,7 +229,6 @@ class Clientes extends CI_Controller {
         ];
         $this->cmn_functs->resp('front_call',$r);
     }
-
 
 
     // *************************************************************************
@@ -441,37 +451,35 @@ class Clientes extends CI_Controller {
     // *** *elements resumen  ELEMENTS DEL RESUMEN DE CUENTA
     //******** UPDATED 11 agosto 2020
     function get_elements(){
-        $p = $this->input->post('data');
-        // $time1 = date('H:i:s');
-        // $this->fix_cli_titular();
-        // DTA DEL LOTE Y LOS SERVICIOS ASOCIADOS
-        $elm['lote'] = $this->get_lote($p['elm_id']);
-        // $time2 = date('H:i:s');
-        $elm['srv'] = $this->get_srvs($p['elm_id']);
-        $elm['datos_reserva'] = $this->get_datos_reserva($elm);
-        $elm['last_mov'] = $this->get_last_movs($p['elm_id']);
-        $elm['uploaded_files'] = ['lote_data_gen'=>$this->cmn_functs->get_uploaded_files($p['elm_id'],'lote_data_gen'),'web_cli'=>$this->cmn_functs->get_uploaded_files($p['elm_id'],'web_cli')] ;
-        $elm['method']='get_elements';
-        $elm['action']='response';
-        $elm['route']= $this->route;
+            $p = $this->input->post('data');
+            // $time1 = date('H:i:s');
+            // $this->fix_cli_titular();
+            // DTA DEL LOTE Y LOS SERVICIOS ASOCIADOS
+            $elm['lote'] = $this->get_lote($p['elm_id']);
+            // $time2 = date('H:i:s');
+            $elm['srv'] = $this->get_srvs($p['elm_id']);
+            $elm['datos_reserva'] = $this->get_datos_reserva($elm);
+            $elm['last_mov'] = $this->get_last_movs($p['elm_id']);
+            $elm['uploaded_files'] = ['lote_data_gen'=>$this->cmn_functs->get_uploaded_files($p['elm_id'],'lote_data_gen'),'web_cli'=>$this->cmn_functs->get_uploaded_files($p['elm_id'],'web_cli')] ;
+            $elm['method']='get_elements';
+            $elm['action']='response';
+            $elm['route']= $this->route;
 
-        if($elm['lote']){
-            // $elm['time1']= $time1;
-            // $elm['time2'] = $time2;
-            $this->cmn_functs->resp('front_call',$elm);
+            if($elm['lote']){
+                $this->cmn_functs->resp('front_call',$elm);
 
-        }else{
-            // FALLO LA BUSQUEDA DEL NRO. DE LOTE
-            $res =[
-                'tit'=>'Estado de cuenta de clientes',
-                'msg'=>'No se pudo acceder al resumen de cuenta ',
-                'type'=>'warning',
-                'container'=>'modal',
-                'win_close_method' => 'back',
-                'route'=> $this->route
-            ];
-            $this->cmn_functs->resp('myAlert',$res);
-        }
+            }else{
+                // FALLO LA BUSQUEDA DEL NRO. DE LOTE
+                $res =[
+                    'tit'=>'Estado de cuenta de clientes',
+                    'msg'=>'No se pudo acceder al resumen de cuenta ',
+                    'type'=>'warning',
+                    'container'=>'modal',
+                    'win_close_method' => 'back',
+                    'route'=> $this->route
+                ];
+                $this->cmn_functs->resp('myAlert',$res);
+            }
     }
 
     // *******************************************
@@ -519,12 +527,10 @@ class Clientes extends CI_Controller {
         $b = new Atom (0,'BARRIO',$l->get_pcle('emprendimiento')->value);
         // CHECKEA SI LA CUOTA UPCOMING FUE REFINANCIADA
         $this->update_vencimientos($e);
-
         // ACTUALIZA EL PLAN SI ESTA PENDIENTE
         if(intval($e->get_pcle('plan_update_pending')->value) > 0 && intval($e->get_pcle('cant_ctas_ciclo_2')->value) > 0&& $this->usr_obj->permisos_usuario < 3 ){
             $this->call_update_plan($elm_id);
         }
-
         // // EL ESTADO DEL CONTRATO RESCINDIDO ESTA PARA REVISAR **** DEVUELVE UN ARRAY CON STATE Y RSN_ID o false
         // $h = $this->check_historial($l);
         // // DATOS DE CONTRATO RESCISION SI HUBIERA
@@ -624,89 +630,87 @@ class Clientes extends CI_Controller {
                 'fechaMes' => $this->cmn_functs->get_mes_txt(substr($e->get_pcle('fec_ini')->value,3,2)),
                 'fechaYear' => substr($e->get_pcle('fec_ini')->value,6,4),
                 'gremio'=>'',
-            ]
+                ]
         ];
         return $el;
     }
-    //***
-
 
     //****** 10 agosto 2020
     //**** checkea los servicios su hay reserva ontiene los datos para imprimirla
     //************************************************
     function get_datos_reserva($elm_arr){
-      //*** CHECKEA SI HAY SERVICIO 'RESERVA'
-      foreach($elm_arr['srv'] as $s){
-        $rsv = [];
-        if(strpos($s['srvc_name'],'RESERVA DE LOTE') !== false){
-          $rsv['fecha'] = $s['fec_ini'];
-          $rsv['total'] = intval($s['ctas_adelantadas']['total'])+intval($s['ctas_mora']['total'])+intval($s['ctas_pagas']['total'])+intval($s['ctas_restantes']['total']);
-          $rsv['cant_ctas'] = count($s['ctas_adelantadas']['events'])+count($s['ctas_mora']['events'])+count($s['ctas_pagas']['events'])+count($s['ctas_restantes']['events']);
-          $rsv['val_cta'] = $s['cta_upc']['total'];
-          // *****
-
-          return [
-              'desarrollo'=>(!empty($elm_arr['lote']['barrio_nom']))?$elm_arr['lote']['barrio_nom']:'-',
-              'fecha'=> $rsv['fecha'],
-              'lote'=>(!empty($elm_arr['lote']['lote_nom']))?$elm_arr['lote']['lote_nom'] : '-',
-              'anticipo'=> (!empty($elm_arr['lote']['datos_boleto']['monto_ciclo1']))?$elm_arr['lote']['datos_boleto']['monto_ciclo1'] :$elm_arr['lote']['datos_boleto']['monto_ciclo1'],
-              'valor_ctas'=>(!empty($elm_arr['lote']['datos_boleto']['primer_pago_ciclo1']))?$elm_arr['lote']['datos_boleto']['primer_pago_ciclo1'] : '-',
-              'cant_ctas_ciclo1'=>(!empty($elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo1']))?$elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo1'] :'-',
-              'indac'=>(!empty($elm_arr['lote']['indac']))?$elm_arr['lote']['indac'] : '-' ,
-              'cant_ctas_ciclo2'=>(!empty($elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo2']))?$elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo2'] : '-',
-              'tot_reserva'=>$rsv['total'],
-              // 'saldo_reserva'=>88888888,
-              // 'valor_reserva_en_cuotas'=>77777777,
-              'reserva_cant_ctas'=>$rsv['cant_ctas'],
-              'reserva_valor_cta'=>$rsv['val_cta'],
-              // 'monto_parcial'=>44444444,
-              // 'saldo_parcial'=>33333333,
-              'fecha_horario_firma'=>'',
-              'direccion_firma'=>'',
-              'tit_nomap'=>(!empty($elm_arr['lote']['datos_boleto']['tit_nomap']))?$elm_arr['lote']['datos_boleto']['tit_nomap']   : '-',
-              'tit_dni'=>(!empty($elm_arr['lote']['datos_boleto']['tit_dni']))?$elm_arr['lote']['datos_boleto']['tit_dni']   : '-',
-              'tit_cuil'=>(!empty($elm_arr['lote']['datos_boleto']['tit_cuil']))?$elm_arr['lote']['datos_boleto']['tit_cuil']   : '-',
-              'tit_tel'=> (!empty($elm_arr['lote']['datos_boleto']['tit_tel']))?$elm_arr['lote']['datos_boleto']['tit_tel']   : '-',
-              'tit_cel'=> (!empty($elm_arr['lote']['datos_boleto']['tit_cel']))?$elm_arr['lote']['datos_boleto']['tit_cel']   : '-',
-              'tit_domic'=>(!empty($elm_arr['lote']['datos_boleto']['tit_domic']))?$elm_arr['lote']['datos_boleto']['tit_domic']   : '-',
-              'tit_localidad'=>(!empty($elm_arr['lote']['datos_boleto']['tit_localidad']))?$elm_arr['lote']['datos_boleto']['tit_localidad']: '-',
-              'tit_email'=>(!empty($elm_arr['lote']['datos_boleto']['tit_email']))?$elm_arr['lote']['datos_boleto']['tit_email']   : '-',
-              'tit_ocupacion'=>(!empty($elm_arr['lote']['datos_boleto']['tit_ocupacion']))?$elm_arr['lote']['datos_boleto']['tit_ocupacion'] : '-',
-              'tit_nom_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_nom_contacto']))?$elm_arr['lote']['datos_boleto']['tit_nom_contacto']:'-',
-              'tit_dom_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_dom_contacto']))?$elm_arr['lote']['datos_boleto']['tit_dom_contacto']  :'-',
-              'tit_parentesco_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_parentesco_contacto']))?$elm_arr['lote']['datos_boleto']['tit_parentesco_contacto']   : '-',
-              'tit_tel_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_tel_contacto']))?$elm_arr['lote']['datos_boleto']['tit_tel_contacto']   : '-',
-              'tit_email_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_email_contacto']))?$elm_arr['lote']['datos_boleto']['tit_email_contacto']   : '-',
-              'cotit_nomap'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_nomap']))?$elm_arr['lote']['datos_boleto']['cotit_nomap']   : '-',
-              'cotit_dni'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_dni']))?$elm_arr['lote']['datos_boleto']['cotit_dni']   : '-',
-              'cotit_cuil'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_cuil']))?$elm_arr['lote']['datos_boleto']['cotit_cuil']   : '-',
-              'cotit_domic'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_domic']))?$elm_arr['lote']['datos_boleto']['cotit_domic']   : '-',
-              'cotit_locali'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_locali']))?$elm_arr['lote']['datos_boleto']['cotit_locali']   : '-',
-              'cotit_tel'=> (!empty($elm_arr['lote']['datos_boleto']['cotit_tel']))?$elm_arr['lote']['datos_boleto']['cotit_tel']   : '-',
-              'cotit_cel'=> (!empty($elm_arr['lote']['datos_boleto']['cotit_cel']))?$elm_arr['lote']['datos_boleto']['cotit_cel']   : '-',
-              'cotit_email'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_email']))?$elm_arr['lote']['datos_boleto']['cotit_email']   : '-',
-              'cotit_nom_contacto' =>(!empty($elm_arr['lote']['datos_boleto']['cotit_nom_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_nom_contacto']   : '-',
-              'cotit_dom_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_dom_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_dom_contacto']   : '-',
-              'cotit_parentesco_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_parentesco_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_parentesco_contacto']   : '-',
-              'cotit_tel_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_tel_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_tel_contacto']   : '-',
-              'cotit_email_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_email_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_email_contacto']   : '-',
-            ];
+        //*** CHECKEA SI HAY SERVICIO 'RESERVA'
+        foreach($elm_arr['srv'] as $s){
+            $rsv = [];
+            if(strpos($s['srvc_name'],'RESERVA DE LOTE') !== false){
+                $rsv['fecha'] = $s['fec_ini'];
+                $rsv['total'] = intval($s['ctas_adelantadas']['total'])+intval($s['ctas_mora']['total'])+intval($s['ctas_pagas']['total'])+intval($s['ctas_restantes']['total']);
+                $rsv['cant_ctas'] = count($s['ctas_adelantadas']['events'])+count($s['ctas_mora']['events'])+count($s['ctas_pagas']['events'])+count($s['ctas_restantes']['events']);
+                $rsv['val_cta'] = $s['cta_upc']['total'];
+                return [
+                    'desarrollo'=>(!empty($elm_arr['lote']['barrio_nom']))?$elm_arr['lote']['barrio_nom']:'-',
+                    'fecha'=> $rsv['fecha'],
+                    'lote'=>(!empty($elm_arr['lote']['lote_nom']))?$elm_arr['lote']['lote_nom'] : '-',
+                    'anticipo'=> (!empty($elm_arr['lote']['datos_boleto']['monto_ciclo1']))?$elm_arr['lote']['datos_boleto']['monto_ciclo1'] :$elm_arr['lote']['datos_boleto']['monto_ciclo1'],
+                    'valor_ctas'=>(!empty($elm_arr['lote']['datos_boleto']['primer_pago_ciclo1']))?$elm_arr['lote']['datos_boleto']['primer_pago_ciclo1'] : '-',
+                    'cant_ctas_ciclo1'=>(!empty($elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo1']))?$elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo1'] :'-',
+                    'indac'=>(!empty($elm_arr['lote']['indac']))?$elm_arr['lote']['indac'] : '-' ,
+                    'cant_ctas_ciclo2'=>(!empty($elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo2']))?$elm_arr['lote']['datos_boleto'][ 'cant_ctas_ciclo2'] : '-',
+                    'tot_reserva'=>$rsv['total'],
+                    // 'saldo_reserva'=>88888888,
+                    // 'valor_reserva_en_cuotas'=>77777777,
+                    'reserva_cant_ctas'=>$rsv['cant_ctas'],
+                    'reserva_valor_cta'=>$rsv['val_cta'],
+                    // 'monto_parcial'=>44444444,
+                    // 'saldo_parcial'=>33333333,
+                    'fecha_horario_firma'=>'',
+                    'direccion_firma'=>'',
+                    'tit_nomap'=>(!empty($elm_arr['lote']['datos_boleto']['tit_nomap']))?$elm_arr['lote']['datos_boleto']['tit_nomap']   : '-',
+                    'tit_dni'=>(!empty($elm_arr['lote']['datos_boleto']['tit_dni']))?$elm_arr['lote']['datos_boleto']['tit_dni']   : '-',
+                    'tit_cuil'=>(!empty($elm_arr['lote']['datos_boleto']['tit_cuil']))?$elm_arr['lote']['datos_boleto']['tit_cuil']   : '-',
+                    'tit_tel'=> (!empty($elm_arr['lote']['datos_boleto']['tit_tel']))?$elm_arr['lote']['datos_boleto']['tit_tel']   : '-',
+                    'tit_cel'=> (!empty($elm_arr['lote']['datos_boleto']['tit_cel']))?$elm_arr['lote']['datos_boleto']['tit_cel']   : '-',
+                    'tit_domic'=>(!empty($elm_arr['lote']['datos_boleto']['tit_domic']))?$elm_arr['lote']['datos_boleto']['tit_domic']   : '-',
+                    'tit_localidad'=>(!empty($elm_arr['lote']['datos_boleto']['tit_localidad']))?$elm_arr['lote']['datos_boleto']['tit_localidad']: '-',
+                    'tit_email'=>(!empty($elm_arr['lote']['datos_boleto']['tit_email']))?$elm_arr['lote']['datos_boleto']['tit_email']   : '-',
+                    'tit_ocupacion'=>(!empty($elm_arr['lote']['datos_boleto']['tit_ocupacion']))?$elm_arr['lote']['datos_boleto']['tit_ocupacion'] : '-',
+                    'tit_nom_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_nom_contacto']))?$elm_arr['lote']['datos_boleto']['tit_nom_contacto']:'-',
+                    'tit_dom_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_dom_contacto']))?$elm_arr['lote']['datos_boleto']['tit_dom_contacto']  :'-',
+                    'tit_parentesco_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_parentesco_contacto']))?$elm_arr['lote']['datos_boleto']['tit_parentesco_contacto']   : '-',
+                    'tit_tel_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_tel_contacto']))?$elm_arr['lote']['datos_boleto']['tit_tel_contacto']   : '-',
+                    'tit_email_contacto' => (!empty($elm_arr['lote']['datos_boleto']['tit_email_contacto']))?$elm_arr['lote']['datos_boleto']['tit_email_contacto']   : '-',
+                    'cotit_nomap'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_nomap']))?$elm_arr['lote']['datos_boleto']['cotit_nomap']   : '-',
+                    'cotit_dni'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_dni']))?$elm_arr['lote']['datos_boleto']['cotit_dni']   : '-',
+                    'cotit_cuil'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_cuil']))?$elm_arr['lote']['datos_boleto']['cotit_cuil']   : '-',
+                    'cotit_domic'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_domic']))?$elm_arr['lote']['datos_boleto']['cotit_domic']   : '-',
+                    'cotit_locali'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_locali']))?$elm_arr['lote']['datos_boleto']['cotit_locali']   : '-',
+                    'cotit_tel'=> (!empty($elm_arr['lote']['datos_boleto']['cotit_tel']))?$elm_arr['lote']['datos_boleto']['cotit_tel']   : '-',
+                    'cotit_cel'=> (!empty($elm_arr['lote']['datos_boleto']['cotit_cel']))?$elm_arr['lote']['datos_boleto']['cotit_cel']   : '-',
+                    'cotit_email'=>(!empty($elm_arr['lote']['datos_boleto']['cotit_email']))?$elm_arr['lote']['datos_boleto']['cotit_email']   : '-',
+                    'cotit_nom_contacto' =>(!empty($elm_arr['lote']['datos_boleto']['cotit_nom_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_nom_contacto']   : '-',
+                    'cotit_dom_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_dom_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_dom_contacto']   : '-',
+                    'cotit_parentesco_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_parentesco_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_parentesco_contacto']   : '-',
+                    'cotit_tel_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_tel_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_tel_contacto']   : '-',
+                    'cotit_email_contacto' => (!empty($elm_arr['lote']['datos_boleto']['cotit_email_contacto']))?$elm_arr['lote']['datos_boleto']['cotit_email_contacto']   : '-',
+                ];
+            }
         }
-      }
-      return false;
+        return false;
     }
 
-    // checkea si debe suspender la impresion de pagares en fecha de revision.
-    function check_freq_rev($e){
-      // APLICA REVISION EN CICLO 1 ES TRUE Y ESTA EN CICLO 1
-      if(intval($e->get_pcle('aplica_revision')->value) === 1 && intval($e->get_pcle('current_ciclo')->value) === 1 ){
-        return $e->get_pcle('frecuencia_revision')->value;
-      }
-      if(intval($e->get_pcle('current_ciclo')->value) === 2){
-        return $e->get_pcle('frecuencia_revision')->value;
-      }
-      return 0;
-    }
+    //***
+
+        // checkea si debe suspender la impresion de pagares en fecha de revision.
+        function check_freq_rev($e){
+            // APLICA REVISION EN CICLO 1 ES TRUE Y ESTA EN CICLO 1
+            if(intval($e->get_pcle('aplica_revision')->value) === 1 && intval($e->get_pcle('current_ciclo')->value) === 1 ){
+                return $e->get_pcle('frecuencia_revision')->value;
+            }
+            if(intval($e->get_pcle('current_ciclo')->value) === 2){
+                return $e->get_pcle('frecuencia_revision')->value;
+            }
+            return 0;
+        }
 
     //*****  COLUMNA DE BUTTONS DE ACCIONES EN LA TABLA DE RESUMEN DE CUENTA
     //  DEVUELVE EL HTML CON LA LLAMADA A ROUTER.JS Y EL ELEMENT_ID CORRESPONDIENTE A LA CUOTA
@@ -1013,6 +1017,7 @@ class Clientes extends CI_Controller {
       (SELECT value from events_pcles evp5 WHERE evp5.events_id = e.id AND evp5.label = 'monto_pagado' limit 1) as 'Monto Pagado',
       (SELECT value from events_pcles evp7 WHERE evp7.events_id = e.id AND evp7.label LIKE '%recibo%' limit 1) as 'Nro. Comprobante'
       FROM `events` e WHERE e.elements_id = {$p['id']} ";
+    
       $ev = $this->Mdb->db->query($q);
       if(!empty($ev->result_id->num_rows)){
         $r['events'] = $ev->result_array();
@@ -2428,7 +2433,6 @@ class Clientes extends CI_Controller {
                             $struct[$key]['vis_elem_type'] = $this->cmn_functs->get_vis_elem_name($s['vis_elem_type']);
                             if($s['vis_ord_num'] == 99){unset($struct[$key]);}
                         }
-
                         $m = 'new_service_elem';
                         break;
                         default:

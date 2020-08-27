@@ -71,7 +71,7 @@ class Lotes extends CI_Controller {
 		$btns = [
 			['call'=>['method'=>'listado','sending'=>true],'tag'=>'Listado de Lotes'],
 			['call'=>['method'=>'call_new_atom','sending'=>true,'action'=>'call','data'=>0],'tag'=>'Alta de Lote'],
-			['call'=>['method'=>'import_data','sending'=>false,'action'=>'call','data'=>0],'tag'=>'Importar desde Archivo']
+			// ['call'=>['method'=>'import_data','sending'=>false,'action'=>'call','data'=>0],'tag'=>'Importar desde Archivo']
 		];
 		// LIMITACIONES POR PERMISOS USUARIO
 		$permisos = intval($u['permisos_usuario']);

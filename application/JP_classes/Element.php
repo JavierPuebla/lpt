@@ -795,14 +795,23 @@ class Element {
 
 
   function get_events_all(){
-
-    $r = [];
-    $lista = $this->Mdb->db->query("SELECT * from events where elements_id = {$this->id} and events_types_id >= 4 and events_types_id <= 8 ORDER BY id ASC ")->result_array();
-    foreach ($lista as $ev) {
-      $ep = $this->Mdb->db->query('SELECT * from events_pcles where events_id = '.$ev['id'])->result_array();
-      $r[]=['event'=>$ev,'pcles'=>$ep];
+    $r = [];$q = '';
+    // EL QUERY DE LOS EVENTS DE  CONTRATO del lote VARIA DEL ELEMENT CONTRATO_PROVEEDOR
+    $t = intval($this->type_id);
+    if($t === 1 || $t === 4 ){
+      $q = "SELECT * from events where elements_id = {$this->id} and events_types_id >= 4 and events_types_id <= 8 ORDER BY id ASC ";
     }
-    return $r;
+    if($t === 6){
+      $q = "SELECT * from events where elements_id = {$this->id} ORDER BY id ASC ";
+    }
+    if(!empty($q)){
+      $lista = $this->Mdb->db->query($q)->result_array();
+      foreach ($lista as $ev) {
+        $ep = $this->Mdb->db->query('SELECT * from events_pcles where events_id = '.$ev['id'])->result_array();
+        $r[]=['event'=>$ev,'pcles'=>$ep];
+      }
+      return $r;
+    }
   }
 
 

@@ -488,7 +488,8 @@ class Caja extends CI_Controller {
         WHEN p2.name != 'null' THEN CONCAT(atlt.name, ' ' ,p2.name)
         WHEN cctr.nombre != 'null' THEN  cctr.nombre
       END ) as contraparte,
-      (SELECT nombre FROM contab_cuenta_de_imputacion WHERE id = ca.cuenta_imputacion_id) as concepto,
+
+      ci.nombre as concepto,
       pdni.value as dni,
       ca.observaciones as detalle,
       GROUP_CONCAT(atbr.name SEPARATOR ',') as 'cdc_name',

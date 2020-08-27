@@ -45,13 +45,12 @@ function validate_field(i){
 
 function validate_negnum(i){
 	console.log('validating num',i, ($('#'+i).val()> -1))
-	if($('#'+i).val() !== '' && $('#'+i).val() > -1){
+	if ($('#' + i).val() !== '' && parseInt($('#' + i).val()) > -1){
 		return set_true(i);
 	}else{
 		return set_false(i);
 	}
 }
-
 
 function validate_num_minvalue(i,minval){
 	console.log('validating minimo num',i,$('#'+i).val(), minval)
@@ -98,6 +97,7 @@ function validate_not_past_month_limit_1(i){
 	}
 }
 
+
 //**** update 18 de agosto
 function validate_select(i){
 	// console.log('validating select',i, ($('#'+i).val() !== '' && $('#'+i).val() !== -1))
@@ -107,7 +107,6 @@ function validate_select(i){
 		return set_false(i);
 	}
 }
-
 
 // recibe el valor formateado en i
 function validate_fecha_ddmmYYY(lbl){

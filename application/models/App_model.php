@@ -10,6 +10,18 @@ class app_model extends CI_Model {
 		return $this->db->query($x);
 	}
 
+	function get_obras_by_owner(int $owner_id) :array {
+		$q = "SELECT * FROM elements WHERE elements_types_id = 6 AND owner_id = {$owner_id}";
+		$o = $this->db->query($q)->result_array();
+		$r = [];	
+		foreach ($o as $ox) {
+			$xi = new Element($ox['id']);
+			$r[]= $xi->get_props();
+		}
+		return $r;
+	}
+
+	
 	function get_lotes_by_user_dni($d){
 		$x = $this->db->query(
 			"SELECT
@@ -385,6 +397,12 @@ class app_model extends CI_Model {
 		$query = $this -> db -> get_where('usuarios', array('id' => $userid));
 		return $query -> row_array();
 
+	}
+
+	// AUTOCOMPLETE DE PROVEEDORES
+	function atcp_prov($t){
+		$q = "SELECT id,name as label FROM atoms WHERE atom_types_id =  6 AND name LIKE '%$t%' limit 20";
+		return $this->db->query($q)->result_array();
 	}
 
 	// AUTOCOMPLETE DE GET_ELEMENTS SIN RESCINDIDOS

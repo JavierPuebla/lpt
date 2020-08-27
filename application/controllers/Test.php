@@ -131,6 +131,7 @@ class Test extends CI_Controller {
 							$rx['propietario'] = $owner->get_pcle("propietario")->value;
 							$rx['estado_contrato'] = $c->get_pcle('estado_contrato')->value;
 							$rx['cantidad_cuotas_pagadas'] = intval($c->get_ctas_pagas()['ev_count']);
+							$rx['saldo_en_cuenta'] = $this->get_saldo_contrato($row->id);
 
 							$apg = $c->get_total_ctas_a_pagar();
 							$ahorro = $c->get_ahorro_actual_y_acumulado();
@@ -168,86 +169,7 @@ class Test extends CI_Controller {
 
 
 
-	//****** 30 julio 2020
-	//**** realiza el reporte repo_1
-	//************************************************
-	function feed_contratos_old(){
-		set_time_limit(0);
-		$res = [];
-		// validate fecha de ultima consulta
-		// si dif_fecha_consulta_horas (ultima conulta mas tiempo)
-		// es mayor a now() retorna el reg en la base
-		// sino hace el recorrido y guara la nueva version en repo_1
-		// $xq = "SELECT fecha,res FROM repo_1 ORDER BY id DESC LIMIT 1";
-		// $xqry = $this->Mdb->db->query($xq);
-		// if(!$xqry->result_id->num_rows){echo 'fallo la consulta..'; exit();}
-		// $lastcall = new dateTime($xqry->row()->fecha);
-		// $dif_fecha_consulta_horas = $lastcall->add(new DateInterval('PT22H1M'));
-		// $now = new dateTime();
-		// // echo $dif_fecha_consulta_horas->format('Y-m-d H:m:s') ." //// ".$now->format('Y-m-d H:m:s');
-		// if($dif_fecha_consulta_horas  > $now){
-		// 	// echo '<br> returning from db';
-		// 	return $xqry->row()->res;
-		// 	// $res = ' not calling report';
-		// }else{
-		// echo '<pre>';
-		// echo '<br> calling new repo & saving';
-		// $res = ' CALLING report';
-		echo "<br/>querying contratos...";
-		$q_contratos_activos = "SELECT id FROM elements WHERE elements_types_id = 1";
-		$qry = $this->Mdb->db->query($q_contratos_activos);
-		$cntr=[];
-		if($qry && $qry->result_id->num_rows){
-			$cntr=[];
-			foreach ($qry->result() as $row){
-				$rx=[];
-				$c = new Element($row->id);
-				$cr = intval($c->get_pcle('cant_ctas_restantes')->value);
-				if($cr > 1){
-					$owner = new Atom($c->get_pcle('prod_id')->value);
-					if($owner->type == "RESCISION"){
-						$c->set('elements_types_id',5);
-					}
-					if($owner->type == "WRONG_TYPE"){
-						echo '<br/>wrong type'. $row->id."<br/>";
-					}
-					$rx['codigo_lote'] = $owner->name;
-					$rx['barrio'] = $owner->get_pcle("emprendimiento")->value;
-					$rx['propietario'] = $owner->get_pcle("propietario")->value;
-					$rx['estado_contrato'] = $c->get_pcle('estado_contrato')->value;
-					$rx['cantidad_cuotas_pagadas'] = intval($c->get_ctas_pagas()['ev_count']);
-
-					$apg = $c->get_total_ctas_a_pagar();
-					$ahorro = $c->get_ahorro_actual_y_acumulado();
-					$serv = $c->get_srv_data();
-
-					//*** Cleaning $c;
-					$c = null;
-					unset($c);
-					// ****
-					$rx['cantidad_cuotas_a_pagar'] = $apg['cant_ctas'];
-					$rx['monto_1_pago']= $apg['monto_1_pago'];
-					$rx['monto_a_pagar_financ']= $apg['monto_financ'];
-					$rx['monto_cuota_actual'] = $apg['cta_upc'];
-					$rx['ahorro_actual']= $ahorro['actual'];
-					$rx['ahorro_acumulado']= $ahorro['acumulado'];
-					$rx['servcios_cantidad_cuotas_pagadas'] = $serv['cant_ctas_pagadas'];
-					$rx['servcios_cantidad_cuotas_a_pagar'] = $serv['cant_ctas_a_pagar'];
-					$rx['servcios_total_1_pago'] = $serv['monto_1_pago'];
-					$rx['servcios_total_financ'] = $serv['monto_financ'];
-					$cntr[]=$rx;
-				}
-				$cr = null;
-			}
-		}
-
-		//*** SAVE DATA
-		$p = $this->Mdb->db->insert('repo_contratos',[
-			'res'=>json_encode($cntr)
-		]);
-		echo "<br/> Done...";
-	}
-
+	
 	function feed_ingresos_caja(){
 		echo "<br/> Querying ingresos de caja...";
 		$dt_in = date('Y')."-01-01";
@@ -315,12 +237,12 @@ class Test extends CI_Controller {
 		}
 		echo "done...";
 	}
-
+                
 	function feed_cuotas_pagadas(){
 			$dt_in = date('Y')."-01-01";
 			$dt_out = date('Y-m-d');
 			// CUOTA PAGADAS
-			echo "<br/> Querying cuotas pagadas...";
+			echo "<br/> Querying cuotas pagadas...".$dt_out;
 			$qp = "SELECT
 			(CASE WHEN a.name != '' THEN 'CUOTA LOTE '  WHEN  asrv.name != '' THEN serv.name END) as 'Detalle',
 			(CASE WHEN a.name != '' THEN a.name WHEN asrv.name != '' THEN asrv.name END) as 'Codigo Lote',
@@ -348,10 +270,12 @@ class Test extends CI_Controller {
 			LEFT OUTER JOIN atoms a on a.id = epp.value
 			LEFT OUTER JOIN atoms serv on serv.id = eps.value
 			-- LEFT OUTER JOIN contab_cuentas cnt on cnt.id = cuentas_id
-			WHERE STR_TO_DATE(dp.value,'%d/%m/%Y') >= STR_TO_DATE('2020-01-01','%Y-%m-%d') AND STR_TO_DATE(dp.value,'%d/%m/%Y') <= STR_TO_DATE('2020-07-31','%Y-%m-%d')ORDER BY STR_TO_DATE(dp.value,'%d/%m/%Y') ASC";
+			WHERE STR_TO_DATE(dp.value,'%d/%m/%Y') >= STR_TO_DATE('2020-01-01','%Y-%m-%d') AND STR_TO_DATE(dp.value,'%d/%m/%Y') <= STR_TO_DATE('{$dt_out}','%Y-%m-%d')ORDER BY STR_TO_DATE(dp.value,'%d/%m/%Y') ASC";
 
 			$qcp = $this->Mdb->db->query($qp);
+				echo 'num rows'. $qcp->result_id->num_rows;	
 			if($qcp->result_id->num_rows){
+			
 				//*** SAVE DATA
 				$p = $this->Mdb->db->insert('repo_cuotas_pagadas',[
 					'res'=>json_encode($qcp->result_array())
@@ -362,6 +286,17 @@ class Test extends CI_Controller {
 		}
 
 
+	function get_saldo_contrato($e_id){
+		$q_saldo = "SELECT saldo from comprobantes WHERE elements_id = {$e_id} AND estado > 0  ORDER BY id DESC LIMIT 1 ";
+		$cs = $this->Mdb->db->query($q_saldo);
+		if($cs->result_id->num_rows){
+			return intval($cs->row()->saldo);
+		}else{
+			return 0;
+		}
+	}
+	
+	
 	function r1(){
 			$token = $this->input->get('token');
 			$repos = $this->input->get('repo');
@@ -754,5 +689,153 @@ class Test extends CI_Controller {
 			echo "Not found ".$elm_id;
 		}
 	}
+
+
+	// pre trash de funciones 
+	        
+  // *************************************************************************
+  // ******* 17 de enero 2020
+  // ****** OLD PRODUCT MAIN LIST TO DEPRECATE *******
+  // *************************************************************************        
+  public function list(){
+    $d = [];
+    $pr = $this->Mdb->db->query("SELECT id FROM atoms WHERE atom_types_id = $this->types_id ORDER BY id ASC");
+    if($pr->result_id->num_rows){
+      foreach ($pr->result_array() as $prx) {
+        $o = new Atom(intval($prx['id']));
+        $d[] = $o->get_pcle();
+      }
+    }
+    $r = [
+      'route'=> $this->route,
+      'method'=>'list',
+      'action'=>'response',
+      'title'=>' Listado de proveedores',
+      'data'=>$d
+    ];
+    $this->cmn_functs->resp('front_call',$r);
+  }
+        
+        
+  // *************************************************************************
+  // ******* 10 marzo 2020
+  // *************************************************************************
+  // ******* Borra los atoms seleccionados en el array recibido
+  function delete_selected(){
+    $p = $this->input->post('data');
+    foreach ($p as $id) {
+      $x = new Atom($id);
+      $x->kill();
+      
+    }
+    $this->cmn_functs->resp('front_call',
+    [
+      'method'=>'delete_selected',
+      'response'=>true,
+      'msg'=>'Registro borrado'
+      ]
+    );
+  }
+
+  // *************************************************************************
+  // ******* 05 marzo 2020
+  // ******* ACTUALIZA EL PCLE POR EL ID USADO EN LIST
+  // *************************************************************************
+  function pcle_updv(){
+    if(!$this -> session -> userdata('logged_in')){redirect('login', 'refresh');}
+    $p = $this->input->post();
+    $this->cmn_functs->atom_updv($this->route,$p);
+  }
+          
+  // *************************************************************************
+  // ******* 7 de octubre 2019
+  // ******* PREPARA LA VENTANA DEL NUEVO ATOM
+  // *************************************************************************
+  function call_new_atom(){
+    $st = $this->cmn_functs->call_atom_struct($this->type_text);
+    if($st){
+      $this->cmn_functs->resp('front_call',[
+        'route'=>$this->route,
+        'method'=> 'call_new_atom',
+        'sending'=>false,
+        'action'=> 'call_response',
+        'data'=> ['type'=>$this->type_text,'title'=> $this->type_text,'pcles'=>$st],
+        ]);
+      }
+    else{
+        $res =[
+          'tit'=>'Alta de '.$this->type_text,
+          'msg'=>'Error de conexión, intente nuevamente ',
+          'type'=>'warning',
+          'container'=>'modal',
+          'win_close_method' => 'back'
+        ];
+        $this->cmn_functs->resp('myAlert',$res);
+    }
+  }
+    
+  // *************************************************************************
+  // ******* 18 de octubre 2019
+  // ******* GUARDAR NUEVO ATOM PROVEEDOR
+  // *************************************************************************
+  function save_new_atom(){
+    $p = $this->input->post('data');
+    $atom_id = $this->cmn_functs->save_new_atom($p['type_text'],$p['fields']);
+    if($atom_id){
+      // crea element CONTRATO_PROVEEDOR
+      $cpr = new Element(0,"CONTRATO_PROVEEDOR",$atom_id);
+      $cpr->pcle_updv($cpr->get_pcle('fecha_inicio')->id,date('d/m/Y'));
+      $this->cmn_functs->resp('front_call',[
+        'method'=> 'call_new_atom',
+        'sending'=>false,
+        'action'=> 'save_response',
+        'data'=> ['title'=>'Nuevo '.$p['type_text'],'atom_id'=>$atom_id]
+        ]);
+    }
+    else{
+      $res =[
+        'tit'=>'ALTA DE PROVEEDOR',
+        'msg'=>'Error No se registro el nuevo Proveedor',
+        'type'=>'warning',
+        'container'=>'modal',
+        'win_close_method' => 'back'
+      ];
+      $this->cmn_functs->resp('myAlert',$res);
+    }
+  }
+    
+    
+  // *************************************************************************
+  // ******* 4 de octubre 2019
+  // ******* PREPARA LA VENTANA DEl ATOM / ELEM / EVENT A EDITAR
+  // *************************************************************************
+  function call_edit(){
+    $p = $this->input->post('data');
+    $type = 'Atom';
+    $id = $p['id'];
+    $r = $this->cmn_functs->call_edit($type,intval($id));
+    $this->cmn_functs->resp('front_call',[
+      'method'=> 'call_edit',
+      'sending'=>false,
+      'action'=> 'call_response',
+      'data'=> $r
+      ]);
+  }
+    
+  // *************************************************************************
+  // ******* 4 de octubre 2019
+  // *******  GUARDA LOS DATOS DEl ATOM EDITADO
+  // *************************************************************************
+  function save_edit(){
+    $p = $this->input->post('data');
+    $this->cmn_functs->save_edit('Atom',$p);
+    $this->cmn_functs->resp('front_call',[
+      'method'=> 'call_edit',
+      'sending'=>false,
+      'action'=> 'save_response',
+      'data'=> ['result'=>'OK','after_action'=>$p['after_action']]
+      ]);
+  }
+  
 
 }

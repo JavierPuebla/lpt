@@ -518,39 +518,24 @@ function init_table(tid,tbf){
 	'use strict';
 	let settings = {
 		language: TOP.DataTable_lang,
+		// lengthMenu: [[10, 50,100, -1], [10, 50, 100,"Todos"]],
 		deferRender:    true,
-		scrollY:        '60vh',
-		scrollCollapse: false,
-		scrollX:        true,
+		scrollY:        430,
+		scrollX:        false,
+		scrollCollapse: true,
 		scroller:       true,
 
-		select:false,
-		responsive: false,
-
-		dom: 'Bti',
+		// fixedHeader: true,
+		// fixedColumns: true,
+		select:true,
+		responsive: true,
+		dom: 'tiB',
 		// "dom": '<"top">t<"bottom"iB><"clear">',
 
 		buttons: [
-			{
-				extend: 'copy',
-				exportOptions: {
-					columns: ':visible'
-				}
-			},
-			{
-				extend: 'excel',
-				exportOptions: {
-					columns: ':visible'
-				}
-			},
-			{
-				extend: 'print',
-				exportOptions: {
-					columns: ':visible'
-				}
-			},
-			'colvis'
+		'copy', 'excel', 'print','colvis'
 		],
+
 		// 	"info":false,
 		searching:true,
 		// 'lengthChange':false,
@@ -570,7 +555,7 @@ function init_table(tid,tbf){
 		fexc = tbf.filter_exc;
 	}
 	// SI FILTER EXCLUDE ES DISTINTO DE ALL PONEFILTROS A LAS COLUMNAS
-	// if(fexc != 'all'){
+	if(fexc != 'all'){
 		//*** FILTROS DE LAS COLUMNAS
 		for (let i = 0 ; i <= (tblColCount(tid)-1) - fexc; i++) {
 			columns.push({
@@ -580,7 +565,7 @@ function init_table(tid,tbf){
 				// filter_default_label:"Seleccionar filtro",
 				filter_default_label:"Filtrar",
 				filter_reset_button_text:false,
-				exclude:false,
+				exclude:true,
 				exclude_label: '',
 				// select_type_options: {
 				// 	width: '95%',
@@ -590,7 +575,7 @@ function init_table(tid,tbf){
 		}
 		yadcf.init(DTable,columns);
 
-	// }
+	}
 
 	//  falta  refrescar la suma de totales
 	// $( TOP.current_tot_col_datatables_api.column(TOP.current_tot_col).footer() ).html("<th class='d-flex justify-content-end'>"+accounting.formatMoney(TOP.current_tot_col_datatables_api.column( TOP.current_tot_col, {} ).data().sum(), "", 0, ".", ",")+"</th>");
@@ -1197,7 +1182,7 @@ function mk_cli_inputs(o){
 //  retorna el contenido formateado
 function td_format_cont(key,val){
 	let r = "<td>"+val+"</td>";
-	if(key.indexOf('Saldo')> -1 || key.indexOf('Total')> -1){
+	if (key.indexOf('Saldo') > -1 || key.indexOf('Total') > -1 || key.indexOf('CUOTAS') > -1){
 		r =  '<td class=\'text-right\' data-order=\''+val+'\'>'+accounting.formatMoney(parseFloat(val), "", 0, ".", ",")+"</td>" ;
 	}
 	if(key.indexOf('Valor')> -1 || key.indexOf('VALOR')> -1){
@@ -1219,7 +1204,7 @@ function td_format_cont(key,val){
 	if(key.indexOf('Cuenta') > -1 || key.indexOf('Cant') > -1  ){
 		r =  '<td class=\'d-flex justify-content-center\'>'+val+"</td>" ;
 	}
-	if(key.indexOf('Cant') > -1 ){
+	if (key.indexOf('Cant') > -1 ){
 		r =  '<td class=\'d-flex justify-content-center\'>'+val+"</td>" ;
 	}
 	if(key.indexOf('srv_name') > -1 ||key.indexOf('lote_name') > -1 ){
@@ -1626,7 +1611,6 @@ function agregar_adls(t){
 			var cta = TOP.pago.adl_ids.shift();
 			var pcle = TOP.pago.adl_pcles.shift();
 			let lnm = (TOP.data.lote.hasOwnProperty('lote_nom')?TOP.data.lote.lote_nom:'');
-			console.log('agrega adl',TOP);
 			var o = {
 				'selected':true,
 				'events_id':parseInt(cta.events_id),
@@ -1655,7 +1639,6 @@ function agregar_adls(t){
 				if(x.disp.length > 0 && x.pcle.length > 0){
 					var srv_cta =  x.disp.shift();
 					var srv_pcle = x.pcle.shift();
-					console.log('service',srv_pcle);
 					var s = {
 						'selected':true,
 						'events_id':parseInt(srv_cta.events_id),
@@ -2059,6 +2042,13 @@ function fec_frmt_1(d){
 	let mes = ['err','Enero','Febrero', 'Marzo', 'Abril','Mayo','Junio','Julio','Agosto','Septiembre', 'Octubre','Noviembre','Diciembre'];
 	return d.substr(0,d.indexOf('/')) + ' de '+ mes[parseInt(d.substr(d.indexOf('/')+1,d.lastIndexOf('/')))]+" de "+ d.substr(d.lastIndexOf('/')+1);
 }
+
+// retorna el value de a.pcles
+function pclv(a,lbl){
+	let x = a.filter((i) => {return i.label == lbl});
+	return (x.length > 0?x[0].value:false);
+}
+
 
 // obtiene el value de un pcle label
 function get_pcle(parr,lbl){

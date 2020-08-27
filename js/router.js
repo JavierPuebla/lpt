@@ -2,15 +2,12 @@ function router(o){
 	switch(o.method){
 
 		case 'get_saldos':
-		console.log('get saldos',o);
 		if(o.sending){
 			o.sending = false;
 			TOP.send = true;
 		}else{
 			if(o.action == 'response'){
 				TOP.permisos = 10;
-
-
 				TOP.route = o.route;
 				history.add(o);
 				$(document).attr("title", o.title);
@@ -31,8 +28,6 @@ function router(o){
 			}
 		}
 		break;
-
-
 		//*** GENERAL METHODS FROM MARZO 2020
 		case 'listado':
 				console.log('listado',o);
@@ -170,6 +165,91 @@ function router(o){
 		break;
 		// *******************************
 		//  PROVEEDORES / OBRAS
+		case 'get_resumen_proveedor':
+		if(o.sending){
+			TOP.route = 'proveedores/';	
+			TOP.send = true;
+		}else{
+			if(o.action == 'response'){
+				$('#my_modal').modal('hide');
+				console.log(o)	
+				TOP.contrato_proveedor_id = o.props.id;	
+				$('#main_container').html(prv_cards.create(o));
+				// $(document).ready(function () {
+				// 	// set_estado_tables();
+				// 	$('#table_last_movs').dataTable({
+				// 		language: TOP.DataTable_lang,
+				// 		responsive: false,
+				// 		searching: false,
+				// 		lengthChange: false,
+				// 		ordering: false,
+				// 		columnDefs: [
+				// 			{
+				// 				targets: 0,
+				// 				orderable: false,
+				// 			},
+				// 			{
+				// 				targets: 1,
+				// 				orderable: false,
+				// 			},
+				// 			{
+				// 				targets: 2,
+				// 				orderable: false,
+				// 			},
+				// 			{
+				// 				targets: 3,
+				// 				orderable: false,
+				// 			},
+				// 			{
+				// 				targets: 4,
+				// 				orderable: false,
+				// 			}, {
+				// 				targets: 5,
+				// 				orderable: false,
+				// 			}
+				// 		]
+
+				// 	});
+				// 	$('#tbl_ctas').dataTable({
+				// 		"ordering": false,
+				// 		"searching": false,
+				// 		'paging': false,
+				// 		"pageLength": 100,
+				// 		"info": false,
+				// 		language: TOP.DataTable_lang,
+				// 		responsive: true
+				// 	});
+				// 	$('#table_cancs').dataTable({
+				// 		"ordering": false,
+				// 		"searching": false,
+				// 		'paging': false,
+				// 		"pageLength": 100,
+				// 		"info": false,
+				// 		language: TOP.DataTable_lang,
+				// 		responsive: true
+				// 	});
+				// });
+
+			}
+			if (o.action === 'call') {
+				var mdl = get_proveedor_input.create(o)
+				mdl.title = 'Contratos con Proveedores ';
+				mk_modal(mdl);
+				$('#ok_button').hide();
+				$('#prov').autocomplete({
+					source: "proveedores/autocomplete_prov",
+					minLength: 3,
+					response: function (event, ui) {
+					},
+					select: function (event, ui) {
+						front_call({ method: 'get_resumen_proveedor', sending: true, data: { elm_id: ui.item.id, elm_name: ui.item.label } })
+					}
+				});
+				$('#prov').focus();
+				TOP.send = false;
+			}
+		}	
+		break;
 		case 'alta_de_obra':
 		if(o.sending){
 			if(o.action === 'call'){
@@ -190,7 +270,7 @@ function router(o){
 				}
 				o.data = {
 					fields:TOP.fields_contrato.filter(i =>{return i.vis_elem_type !== '-1'}).map(x=>{x.value = route_value_source(x.label);return x;}),
-					owner_id:TOP.fields_contrato.filter(n =>{return n.label === 'owner_id'})[0].value,
+					owner_id: TOP.contrato_proveedor_id,
 					elem_type:6
 				};
 				o.sending = false;
@@ -242,6 +322,7 @@ function router(o){
 
 		}
 		break;
+		// 
 		case 'gestion_de_obras':
 		if(o.sending){
 			if(o.action === 'call'){
@@ -281,17 +362,18 @@ function router(o){
 			}
 		}
 		break;
-		case 'edit_obra_element':
+		case 'get_obra':
 		if(o.sending){
 			if(o.action === 'call'){
-				// ES LLAMADO DESDE GET ELEMENTS PRIMARIO
+				// ES LLAMADO DESDE EL LISTADO DE GESTION DE OBRAS
+
 			}
 			else if (o.action === 'save') {
 
 			}
 		}else{
 			if(o.action == 'response'){
-				console.log('edit obra element',o);
+				console.log('GET_OBRA',o);
 			}
 		}
 
@@ -384,9 +466,7 @@ function router(o){
 			// console.log('upd_ method pero con sending en false... no envia al servidor')
 		}
 		break;
-		// **** CLIENTES GET ELEMENTS RUTEA LAS LLAMADAS A CONTRATOS DE TODOS
-		// CLIENTES, PROVEEDORES Y REPORTES HAY QUE REFACTORIZAR PARA
-		// ATENDER LAS RESPUESTAS DE TODOS LOS CONTROLLERS
+		// **** CLIENTES GET ELEMENTS RUTEA LAS LLAMADAS A CONTRATOS DE LOTES
 		case 'get_elements' :
 		if(o.sending){
 			if(o.hasOwnProperty('steps_back')){
@@ -1428,6 +1508,7 @@ function router(o){
 		});
 		break;
 
+
 		case 'cli_file_upload':
 		console.log('file upload',o)
 		if(o.sending){
@@ -1640,19 +1721,18 @@ function router(o){
 				TOP.curr_elem_id = o.data.id
 				//**** CONTRATO
 				let not_editable = [];
-				if(parseInt(o.user_id) === 484 || parseInt(o.user_id) === 501){
+				if (o.permisos == 0){
 					// TODOS LOS CAMPOS SON EDITABLES
-					not_editable =[]; //o.data.pcles.map(function(x){return x.label});
+					not_editable =['barrio_id','monto_cta_1','indac','frecuencia_indac'];
 				}else{
 					// TODOS LOS CAMPOS SON READONLY
 					not_editable = o.data.pcles.map(function(x){return x.label});
 				}
-					// ALGUNOS CAMPOS EDITABLES OTROS NO
+				console.log('not edit',not_editable);
+				// ALGUNOS CAMPOS EDITABLES OTROS NO
 					//not_editable = ['cli_id','titular_id','cotitular_id','tasa_reintegro_id','prod_id','monto_total','monto_cta_1','current_ciclo','cant_ctas','cant_ctas_ciclo_2','indac','interes','anticipo','cant_ctas_restantes','frecuencia_ctas_refuerzo','plan_update_pending'];
 				let contrato = editable_set.create(o.data.pcles,{'readonly':not_editable}).get_screen();
 				contrato = (collapsed_panel.create({title:'DATOS DEL CONTRATO',id:'ctr',content:contrato})).get_screen();
-
-				//***** EL LOTE
 				ownr_tit = o.data.owner_type+" "+o.data.owner_name
 				datos_owner = (collapsed_panel.create({title:ownr_tit,id:'prod',content:editable_set.create(o.data.owner_props,{}).get_screen()})).get_screen();
 
@@ -1702,7 +1782,7 @@ function router(o){
 					// 'total':o.data.cuotas.tot_pagado,
 					extras: {
 						'select_id':false,
-							'caller':'edit_element',
+						'caller':'edit_element',
 						'editables':['estado','fecha_vto','monto_pagado','fec_pago','dias_mora','interes_mora'],'edit_call':'update_event'
 					}
 				};
@@ -2259,7 +2339,7 @@ function router(o){
 				$('#my_modal').modal('hide');
 				$('#navbar_msg').html(o.tit);
 				$(document).attr("title", o.tit);
-console.log('caja',o.data);
+
 				var tbl_id =  'tbl_egr_caja';
 				$('#main_container').html("<div class='container mt-5'>"+repotbl.create(o.data,tbl_id)+"</div>");
 				$(document).ready(function (){
@@ -3743,6 +3823,9 @@ console.log('caja',o.data);
 			TOP.send = false;
 		}else{
 			TOP.curr_edit = o;
+			// TOP.curr_edit.container_id =
+
+			// console.log('editing',o);
 			mk_modal(textarea_obj.create({label:o.pcle_lbl,value:$('#'+o.container_id).html()}));
 			TOP.curr_ok_act = {
 				method:'save_pcle',
@@ -3756,6 +3839,9 @@ console.log('caja',o.data);
 			o.sending = false;
 			TOP.send = false;
 		}else{
+
+
+
 			delete_permission = (parseInt(TOP.user_id) == 501 ? true : false);
 			console.log('del permi',delete_permission);
 			let r = "<div class='embed-responsive embed-responsive-1by1'><iframe class='embed-responsive-item' src="+o.src+"></iframe></div>"
@@ -3918,17 +4004,17 @@ console.log('caja',o.data);
 			o.sending = false;
 			TOP.send = true;
 		}else{
-			TOP.curr_ok_act = {
-				method:'pcle_updv_fec_ini',
-				sending:true,
-				data:o.data
-			};
-			TOP.curr_close_act = {
-				method:'light-back',
-				sending:false,
+			// TOP.curr_ok_act = {
+			// 	method:'pcle_updv_fec_ini',
+			// 	sending:true,
+			// 	data:o.data
+			// };
+			// TOP.curr_close_act = {
+			// 	method:'light-back',
+			// 	sending:false,
 
-			};
-			myAlert({tit:'Modifica la fecha de inicio del contrato!', msg:'Modificar la fecha de inicio del contrato altera las fechas de vencimiento de todas las cuotas. Desea continuar con la operacion? ',type:'danger',container:'modal',extra:'no_autohide'});
+			// };
+			// myAlert({tit:'Modifica la fecha de inicio del contrato!', msg:'Modificar la fecha de inicio del contrato altera las fechas de vencimiento de todas las cuotas. Desea continuar con la operacion? ',type:'danger',container:'modal',extra:'no_autohide'});
 			if(o.response){
 				TOP.curr_ok_act = {};
 				$('#my_modal').modal('hide');

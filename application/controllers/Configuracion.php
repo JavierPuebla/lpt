@@ -646,6 +646,7 @@ class Configuracion extends CI_Controller {
           'web_cli'=>$this->cmn_functs->get_uploaded_files($id,'web_cli')
         ];
       $r['lote'] = ['elements_id'=>$id,'lote_nom'=>$pr_nom];
+
       $this->cmn_functs->resp('front_call',[
         'user_id'=> $this->user['user_id'],
         'permisos'=> $this->user['user_permisos'],
@@ -708,28 +709,31 @@ class Configuracion extends CI_Controller {
 
   function pcle_updv(){
     $p = $this->input->post('data');
-    $e = new $p['type']($p['prnt_id']);
     if(array_key_exists('val',$p) && array_key_exists('type',$p) && array_key_exists('pcle_id',$p) && array_key_exists('prnt_id',$p)){
-      //****  SI EL EDITOR DE CONTRATOS ESTA EDITANDO EL CODIGO DEL LOTE
+      $e = new $p['type']($p['prnt_id']);
+      // SI ESTA MODIFICANDO EL LOTE DEL CONTRATO MODIFICA LOS ESTADOS DEL OS LOTES y recarga editar contrato
       if($p['type'] == 'Element' && strpos($p['lid'],'prod_id_') !== false ){
-        // PASO A DISPONIBLE EL LOTE ANTERIOR
-
-        $prev_lote
-
-        // actualizo el estado del lote y el barrio id del contrato
+        //*** REVIERTO EL ESTADO DEL LOTE PREVIO
+        $olt = $e->get_pcle('prod_id')->value;
+        $aolt = new Atom($olt);
+        $aolt->pcle_updv($aolt->get_pcle('estado')->id,'DISPONIBLE');
+        //** NUEVO VALUE DEL PCLE
+        $e->pcle_updv($p['pcle_id'],$p['val']); 
+        // ** NUEVO OWNER
         $e->set('owner_id',$p['val']);
+        // ** CAMBIO EL ESTADO DEL NUEVO LOTE
         $a = new Atom($p['val']);
         $a->pcle_updv($a->get_pcle('estado')->id,'ACTIVO');
+        // ** CAMBIO EL BARRIO EN EL CONTRATO
         $barrio_id = $a->get_pcle('barrio_id')->value;
         $e->pcle_updv($e->get_pcle('barrio_id')->id,$barrio_id);
-
-        // ACTUALIZO EL PARTICLE EL CONTRATO
-
-        $e->pcle_updv($p['pcle_id'],$p['val']);
-
+        //** RECARGO EDITAR CONTRATO
         $this->cmn_functs->resp('front_call',['method'=>'edit_element','sending'=>true,'data'=>['type'=>"Element",'id'=>$p['prnt_id']]]);
         return;
       }
+      //** NUEVO VALUE DEL PCLE
+      $e->pcle_updv($p['pcle_id'],$p['val']); 
+      
       // return 'ok';
       $this->cmn_functs->resp('front_call',['method'=>'pcle_updv_cnfg','response'=>true,'msg'=>'OK :)']);
     }else{
@@ -738,43 +742,7 @@ class Configuracion extends CI_Controller {
     }
   }
 
-  //*** MODIFICA LA FECHA DE INICIO Y TODAS LAS FEHCAS DE VENCIMIENTO DE LAS CUOTAS SIGUIENTES
-  function pcle_updv_fec_ini($type=0,$prnt_id=0,$id=0,$v=0){
-    if($type == 0 && $prnt_id == 0 && $id == 0 && $v == 0){
-      $p = $this->input->post('data');
-      if(array_key_exists('type',$p) && array_key_exists('prnt_id',$p) && array_key_exists('id',$p) && array_key_exists('val',$p)){
-        $type = $p['type'];
-        $prnt_id = $p['prnt_id'];
-        $id = $p['id'];
-        $v = $p['val'];
-      }
-    }
-    if($type && $prnt_id && $id && $v){
-      $e = new $type($prnt_id);
-      $e->pcle_updv($id,$v);
-
-      //*** PONE A 10 DEL MES LA FECHA PARA TENER FECHA DE VENCIMIENTO
-        $nfi = '10'.substr($v, 2);
-        $fv = new DateTime($this->cmn_functs->fixdate_ymd($nfi));
-      //******
-
-      //**** GET TODAS LAS CUOTAS
-      $ctas = $e->get_events_cuota();
-
-      foreach ($ctas as $cta) {
-        $ev = new Event($cta['event']['id']);
-        //  UPDATE PROPERTY DATE
-        $ev->set('date',$fv->format('Y-m-d'));
-        // UPDATES PCLE FECHA DE VENCIMIENTO
-        $ev->set_pcle($ev->get_pcle('fecha_vto')->id,'fecha_vto',$fv->format('d/m/Y'));
-        // INCREMENTO DEL MES DE FV
-        $fv->modify('next month');
-      }
-    }
-    $this->cmn_functs->resp('front_call',['method'=>'pcle_updv_fec_ini','response'=>true,'type'=>$type,'id'=>$prnt_id]);
-
-  }
-
+ 
   // ** ACTUALIZA EL ELEMENT PCLE
   function update_elem_pcle(){
     $p = $this->input->post('data');
@@ -788,13 +756,13 @@ class Configuracion extends CI_Controller {
 
   /* ******** 19/11/2019
   *** actualiza un event cuando lo llama el editor de contatos
-  *** esta inactivo actualmente
+  *****
   */
   function update_event(){
     $p = $this->input->post('data');
     //  obtengo el evento que quiero editar o error
     $ev = new Event($p['parent_id']);
-    if(empty($ev)){
+    if(empty($ev) || empty($p['elem_id'])){
       exit('event_id no valido');
     }
     // DEFINIR QUE ESTOY ACTUALIZANDO
@@ -803,9 +771,6 @@ class Configuracion extends CI_Controller {
     $ev->set_pcle(0,'modif_date',date('Y-m-d'),'',-1);
     $ev->set_pcle(0,'prev_val','label:'.$p['label'].' value:'.$ev->get_pcle($p['label'])->value,'',-1);
     $ev->set_pcle(0,'last_modif','label:'.$p['label'].' value:'.$p['val'],'',-1);
-
-
-
     switch ($p['label']) {
       case 'monto_cta':
         $ev->set_pcle(0,'monto_cta',intval($p['val']));
@@ -820,24 +785,37 @@ class Configuracion extends CI_Controller {
         }
       break;
       case 'monto_pagado':
-        $ev->set_pcle(0,'monto_pagado',intval($p['val']),'Monto Pagado',1);
+        // SOLO SE PUEDE MODIFICAR O ANULAR NO SE PUEDE INGRESAR NUEVOS PAGOS 
+        // NUA VES ANULADO EL USUARIO NO SABE QUE EL RECORD SIGUE AHI SOLO VE EL ESTADO ACTUAL
+        // SET_PCLE CERO VA A BUSCAR EL PCLE DE ESTE EVENTO
+        $ev->pcle_updv($ev->get_pcle('monto_pagado')->id,intval($p['val']));
+        $nro_rec = $ev->get_pcle('recibo_nro')->value;
+        // ES UNA MODIFICACION DEL PAGO 
         if(intval($p['val']) > 0 ){
+          // FECHA DE PAGO NULA O '-' 
           if(!DateTime::createFromFormat('d/m/Y', $ev->get_pcle('fec_pago')->value) || $ev->get_pcle('fec_pago')->value == '-'){
+            // TODAY  
             $xd = new DateTime(date('Y-m-d'));
             $fp = $xd->format('d/m/Y');
           }else{
+            // FECHA DEL EVENTO 
             $fp = $ev->get_pcle('fec_pago')->value;
           }
+          // DETERMINA EL ESTADO ENTRE FUERA DE TERMINO A TERMINO O ADELANTADA EN BASE A LA FECHA DE PAGO
           $estado = ($this->cmn_functs->get_estado_pago($ev->get_pcle('fecha_vto')->value,$fp) == 'adelantada')?'pagado':$this->cmn_functs->get_estado_pago($ev->get_pcle('fecha_vto')->value,$fp);
           $ev->set_pcle(0,'estado',$estado);
           $ev->set_pcle(0,'recibo_nro',-1);
-        }else{
+        }
+        // ES UNA ANULACION DEL PAGO 
+        else{
           $ev->set_pcle(0,'estado','a_pagar');
-          $check_recibo = $ev->get_pcle('recibo_nro');
-          if(!empty($check_recibo)){
-            $this->app_model->update('comprobantes',['estado'=>-1],'nro_comprobante',$check_recibo->value);
+          if(!empty($nro_rec)){
+            //  ** ESTADO PASA A SER -1 
+            $this->app_model->update('comprobantes',['estado'=>-1],'nro_comprobante',$nro_rec);
           }
         }
+        //*** RECALCULAR SALDO
+        $this->cmn_functs->recalc_saldo($p['elem_id'],$nro_rec);
       break;
       case 'fec_pago':
         if(DateTime::createFromFormat('d/m/Y', $p['val'])){
