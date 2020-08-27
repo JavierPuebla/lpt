@@ -8,3 +8,10 @@
 /to dump
 /to_deploy
 /uploads
+/core
+/helpers
+/hooks
+/logs
+/system
+/.htaccess
+/lpt_work.code-workspace
