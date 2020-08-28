@@ -1,10 +1,7 @@
-// testing last commit 
-
 
 //****** 25 agosto 2020
 //**** RESUMEN DE CUENTA DE PROVEEDOR
 //************************************************
-
 const prv_cards = {
 	_data:'',
 	_screen: '',
